@@ -57,9 +57,9 @@ const handleClickAddonSettings = addonId => {
 
 const messages = defineMessages({
     defaultTitle: {
-        defaultMessage: 'Run Scratch projects faster',
+        defaultMessage: 'Make and play games on any device',
         description: 'Title of homepage',
-        id: 'tw.guiDefaultTitle'
+        id: 'sp.guiDefaultTitle'
     }
 });
 
@@ -159,14 +159,14 @@ const Footer = () => (
                     </a>
                 </div>
                 <div className={styles.footerSection}>
-                    <a href="https://scratch.mit.edu/users/GarboMuffin/#comments">
+                    <a href="https://github.com/adrian-plumpton/ScratchPro/issues">
                         <FormattedMessage
                             defaultMessage="Feedback & Bugs"
                             description="Link to feedback/bugs page"
                             id="tw.feedback"
                         />
                     </a>
-                    <a href="https://github.com/TurboWarp/">
+                    <a href="https://github.com/adrian-plumpton/ScratchPro">
                         <FormattedMessage
                             defaultMessage="Source Code"
                             description="Link to source code"
@@ -283,9 +283,9 @@ class Interface extends React.Component {
                                 <p>
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a Scratch mod that compiles projects to JavaScript to make them run really fast. Try it out by inputting a project ID or URL above or choosing a featured project below."
+                                        defaultMessage="{APP_NAME} is a block-coding editor for making games that play well on phones and tablets, with touch controls. It is based on TurboWarp. Try it out by inputting a project ID or URL above or choosing a featured project below."
                                         description="Description of TurboWarp on the homepage"
-                                        id="tw.home.description"
+                                        id="sp.home.description"
                                         values={{
                                             APP_NAME
                                         }}
