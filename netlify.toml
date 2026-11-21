@@ -6,6 +6,9 @@
 [build.environment]
   NODE_ENV = "production"
   NODE_OPTIONS = "--max-old-space-size=4096"
+  # NODE_ENV=production makes npm skip devDependencies, but the build tools
+  # (rimraf, mkdirp, webpack) are devDependencies, so install them anyway.
+  NPM_FLAGS = "--include=dev"
 
 # Production script files have a content hash in their names, so they can be cached for good.
 [[headers]]
