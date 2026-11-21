@@ -7,6 +7,7 @@ import {connect} from 'react-redux';
 import {setProjectUnchanged} from '../reducers/project-changed';
 import {
     LoadingStates,
+    defaultProjectId,
     getIsCreatingNew,
     getIsFetchingWithId,
     getIsLoading,
@@ -22,6 +23,7 @@ import {
 
 import log from './log';
 import storage from './storage';
+import takeSampleProject from './sample-project';
 import {ProjectUnsharedError, ProjectFetchError, ProjectUnavailableLegalReasons} from './tw-load-project-error';
 
 import VM from 'scratch-vm';
@@ -114,7 +116,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             let projectUrl = typeof URLSearchParams === 'undefined' ?
                 null :
                 new URLSearchParams(location.search).get('project_url');
-            if (projectUrl) {
+            // ScratchPro: the first page load opens the Spark Hop sample game instead of a blank project.
+            const sampleProject = takeSampleProject(!projectUrl && projectId === defaultProjectId);
+            if (sampleProject) {
+                assetPromise = Promise.resolve({data: sampleProject});
+            } else if (projectUrl) {
                 if (
                     !projectUrl.startsWith('http:') &&
                     !projectUrl.startsWith('https:') &&

@@ -16,6 +16,14 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
   remembered on that device.
 - Add `?touch=1` to a URL to try the touch experience on a computer (`?touch=0` turns it off).
 
+## Sample game
+
+The first time the page loads, it opens **Spark Hop**, a small platformer that shows the
+on-screen controls: a joystick for the arrow keys, **Space** to jump and **X** to dash. Collect
+sparks for extra time and avoid the red blobs. **File > New** still starts a blank project.
+The game is built by `node scripts/build-sample-project.js`, which writes
+`src/lib/sample-project/spark-hop.sb3`.
+
 ## Making games on phones and tablets
 
 - **Phones:** the editor shows one pane at a time. Switch with the bar at the bottom: **Code** or
