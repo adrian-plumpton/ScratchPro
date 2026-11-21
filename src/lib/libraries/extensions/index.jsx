@@ -50,12 +50,24 @@ import gdxforConnectionIconURL from './gdxfor/gdxfor-illustration.svg';
 import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
 import twIcon from './tw/tw.svg';
+import spTouchIcon from './sptouch/sptouch.svg';
 import customExtensionIcon from './custom/custom.svg';
 import returnIcon from './custom/return.svg';
 import galleryIcon from './gallery/gallery.svg';
 import {APP_NAME} from '../../brand';
 
 export default [
+    {
+        name: 'Touch',
+        extensionId: 'sptouch',
+        // Loaded from this site; ScratchPro trusts its own extensions (see tw-security-manager).
+        extensionURL: new URL(`${process.env.ROOT}extensions/sptouch.js`, location.href).href,
+        iconURL: spTouchIcon,
+        description: 'Joystick, finger positions, vibration and on-screen controls for phone and tablet games.',
+        tags: ['scratchpro'],
+        incompatibleWithScratch: true,
+        featured: true
+    },
     {
         name: (
             <FormattedMessage

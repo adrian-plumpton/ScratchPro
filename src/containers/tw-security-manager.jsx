@@ -18,6 +18,24 @@ const manuallyTrustExtension = url => {
     extensionsTrustedByUser.add(url);
 };
 
+// ScratchPro's own extensions live at <site>/extensions/sp*.js, on this site or the main deployment.
+const SCRATCHPRO_ORIGINS = [location.origin, 'https://scratchpro-app.netlify.app'];
+
+/**
+ * @param {string} url URL as a string.
+ * @returns {boolean} True if it is one of ScratchPro's own extensions.
+ */
+const isScratchProExtension = url => {
+    try {
+        const parsed = new URL(url);
+        return SCRATCHPRO_ORIGINS.includes(parsed.origin) &&
+            /\/extensions\/sp[a-z]+\.js$/.test(parsed.pathname) &&
+            !parsed.search && !parsed.hash;
+    } catch (e) {
+        return false;
+    }
+};
+
 /**
  * Trusted extensions are loaded automatically and without a sandbox.
  * @param {string} url URL as a string.
@@ -29,6 +47,9 @@ const isTrustedExtension = url => (
 
     // For development.
     url.startsWith('http://localhost:8000/') ||
+
+    // ScratchPro's own built-in extensions (eg. Touch), from this site or the main deployment.
+    isScratchProExtension(url) ||
 
     extensionsTrustedByUser.has(url)
 );

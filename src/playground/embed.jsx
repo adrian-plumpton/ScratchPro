@@ -10,6 +10,7 @@ import {Theme} from '../lib/themes/index.js';
 
 import GUI from './render-gui.jsx';
 import TWWindchimeSubmitter from '../containers/tw-windchime-submitter.jsx';
+import SPTouchControls from '../containers/sp-touch-controls.jsx';
 import render from './app-target';
 
 const getProjectId = () => {
@@ -48,6 +49,8 @@ const Embed = props => (
     <React.Fragment>
         <GUI {...props} />
         <TWWindchimeSubmitter />
+        {/* ScratchPro: edge-to-edge layout and touch controls for embedded games on phones */}
+        <SPTouchControls />
     </React.Fragment>
 );
 

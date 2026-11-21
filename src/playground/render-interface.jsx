@@ -43,6 +43,8 @@ import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
 import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
 import {APP_NAME} from '../lib/brand.js';
+import SPTouchControls from '../containers/sp-touch-controls.jsx';
+import SPMobileEditor from '../containers/sp-mobile-editor.jsx';
 
 import styles from './interface.css';
 
@@ -257,6 +259,8 @@ class Interface extends React.Component {
                         backpackHost="_local_"
                         {...props}
                     />
+                    <SPTouchControls />
+                    <SPMobileEditor />
                     {isHomepage ? (
                         <React.Fragment>
                             {isBrowserSupported() ? null : (

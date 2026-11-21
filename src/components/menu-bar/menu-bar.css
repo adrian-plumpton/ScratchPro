@@ -233,3 +233,10 @@
     color: inherit;
     text-decoration: none;
 }
+
+/* ScratchPro: keep the menu bar on one screen width on phones */
+@media (max-width: 600px) {
+    .feedback-link {
+        display: none;
+    }
+}

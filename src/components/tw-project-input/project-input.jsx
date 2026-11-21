@@ -3,6 +3,7 @@ import React from 'react';
 import {connect} from 'react-redux';
 import bindAll from 'lodash.bindall';
 import ReactTooltip from 'react-tooltip';
+import {isTouchDevice} from '../../lib/sp-mobile';
 import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import {defaultProjectId} from '../../reducers/project-state';
 import styles from './project-input.css';
@@ -36,7 +37,8 @@ class ProjectInput extends React.Component {
     componentDidUpdate (prevProps) {
         if (this.props.projectId !== prevProps.projectId) {
             if (this.props.projectId === defaultProjectId) {
-                this.input.focus();
+                // ScratchPro: on phones, focusing would pop up the keyboard unasked
+                if (!isTouchDevice()) this.input.focus();
                 this.input.selectionStart = this.input.value.length;
             } else {
                 this.input.blur();
@@ -75,7 +77,7 @@ class ProjectInput extends React.Component {
         if (this.extractProjectId(e.target.value)) {
             e.target.select();
         }
-        ReactTooltip.show(this.tooltip);
+        if (!isTouchDevice()) ReactTooltip.show(this.tooltip);
     }
     inputRef (el) {
         this.input = el;
@@ -88,12 +90,16 @@ class ProjectInput extends React.Component {
         return (
             <div
                 ref={this.tooltipRef}
-                data-tip={this.props.intl.formatMessage(messages.tooltip)}
+                // ScratchPro: hover tips don't suit touch screens, where this one covered the game controls
+                data-tip={isTouchDevice() ? null : this.props.intl.formatMessage(messages.tooltip)}
             >
-                <ReactTooltip
-                    className={styles.tooltip}
-                    effect="solid"
-                />
+                {isTouchDevice() ? null : (
+                    <ReactTooltip
+                        className={styles.tooltip}
+                        effect="solid"
+                        place="bottom"
+                    />
+                )}
                 <input
                     ref={this.inputRef}
                     spellCheck="false"

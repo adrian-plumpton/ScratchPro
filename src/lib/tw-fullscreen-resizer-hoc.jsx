@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import {connect} from 'react-redux';
 
 import {setDimensions} from '../reducers/tw';
+import {isCompactEditor} from './sp-mobile';
 
 const TWFullScreenResizerHOC = function (WrappedComponent) {
     class FullScreenResizer extends React.Component {
@@ -20,7 +21,7 @@ const TWFullScreenResizerHOC = function (WrappedComponent) {
             window.removeEventListener('resize', this.handleResize);
         }
         handleResize () {
-            if (this.props.isFullScreen) {
+            if (this.props.isFullScreen || isCompactEditor()) {
                 this.props.onSetDimensions([window.innerWidth, window.innerHeight]);
             }
         }
@@ -44,7 +45,9 @@ const TWFullScreenResizerHOC = function (WrappedComponent) {
         onSetDimensions: PropTypes.func
     };
     const mapStateToProps = state => ({
-        isFullScreen: state.scratchGui.mode.isFullScreen || state.scratchGui.mode.isEmbedded
+        // ScratchPro: the player page also resizes its stage to fit the screen
+        isFullScreen: state.scratchGui.mode.isFullScreen || state.scratchGui.mode.isEmbedded ||
+            state.scratchGui.mode.isPlayerOnly
     });
     const mapDispatchToProps = dispatch => ({
         onSetDimensions: dimensions => dispatch(setDimensions(dimensions))

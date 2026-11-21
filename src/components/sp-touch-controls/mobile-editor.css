@@ -1,0 +1,80 @@
+/* ScratchPro phone editor: bottom bar switching between Code and Stage, with Play in the middle */
+
+.nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 495; /* above the editor, below menus (491 is the menu bar; dropdowns open upward of this) */
+    height: calc(58px + env(safe-area-inset-bottom));
+    padding: 6px 12px env(safe-area-inset-bottom);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-sizing: border-box;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.tab,
+.selected {
+    flex: 1 1 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 44px;
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #575e75;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    touch-action: manipulation;
+}
+
+.selected {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
+.tab svg,
+.selected svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.play {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    margin-top: -18px;
+    border: 4px solid #fff;
+    border-radius: 50%;
+    background: #22c55e;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 4px 14px rgba(34, 197, 94, 0.45);
+    touch-action: manipulation;
+}
+
+.play svg {
+    width: 26px;
+    height: 26px;
+    margin-left: 3px;
+}
+
+.play:active {
+    transform: scale(0.95);
+}

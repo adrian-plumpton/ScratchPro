@@ -94,3 +94,16 @@ a {
 .footer-section > * {
     margin-bottom: 10px;
 }
+
+/* ScratchPro: phones */
+.player-only {
+    overflow-x: hidden;
+}
+.player-only .center {
+    max-width: calc(100vw - 16px);
+}
+@media (max-width: 520px) {
+    .footer-section {
+        width: 160px;
+    }
+}

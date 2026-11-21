@@ -4,6 +4,7 @@ import {
     STAGE_DISPLAY_SIZES,
     FIXED_WIDTH
 } from '../lib/layout-constants';
+import {isTouchDevice, isCompactEditor, getPlayerMaxStageWidth, getCompactMaxStageWidth} from './sp-mobile';
 
 const maxScaleParam = typeof URLSearchParams !== 'undefined' && new URLSearchParams(location.search).get('scale');
 
@@ -44,9 +45,10 @@ const resolveStageSize = (stageSizeMode, isUnconstrained) => {
  * @param {STAGE_DISPLAY_SIZES} stageSize - the current fully-resolved stage size.
  * @param {{width: number, height: number}} customStageSize Custom stage size
  * @param {boolean} isFullScreen - true if full-screen mode is enabled.
+ * @param {boolean} [isPlayerOnly] - true on the player page; the stage then shrinks to fit narrow screens.
  * @return {StageDimensions} - an object describing the dimensions of the stage.
  */
-const getStageDimensions = (stageSize, customStageSize, isFullScreen) => {
+const getStageDimensions = (stageSize, customStageSize, isFullScreen, isPlayerOnly) => {
     const stageDimensions = {
         heightDefault: customStageSize.height,
         widthDefault: customStageSize.width,
@@ -56,9 +58,13 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen) => {
     };
 
     if (isFullScreen) {
-        stageDimensions.height = window.innerHeight -
+        // ScratchPro: on phones and tablets full screen is edge to edge, with the controls floating on top.
+        const immersive = isTouchDevice();
+        stageDimensions.height = immersive ? window.innerHeight : (
+            window.innerHeight -
             STAGE_DIMENSION_DEFAULTS.menuHeightAdjustment -
-            STAGE_DIMENSION_DEFAULTS.fullScreenSpacingBorderAdjustment;
+            STAGE_DIMENSION_DEFAULTS.fullScreenSpacingBorderAdjustment
+        );
 
         stageDimensions.width = stageDimensions.height * (customStageSize.width / customStageSize.height);
 
@@ -83,6 +89,16 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen) => {
             stageDimensions.scale = metadata.scale;
             stageDimensions.height = stageDimensions.scale * stageDimensions.heightDefault;
             stageDimensions.width = stageDimensions.scale * stageDimensions.widthDefault;
+        }
+
+        // ScratchPro: never let the player stage (or the phone editor's stage) be wider than the screen.
+        let maxWidth = Infinity;
+        if (isPlayerOnly) maxWidth = getPlayerMaxStageWidth();
+        else if (isCompactEditor()) maxWidth = getCompactMaxStageWidth(customStageSize);
+        if (stageDimensions.width > maxWidth) {
+            stageDimensions.width = maxWidth;
+            stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
+            stageDimensions.height = stageDimensions.scale * stageDimensions.heightDefault;
         }
     }
 

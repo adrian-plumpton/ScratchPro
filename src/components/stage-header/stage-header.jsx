@@ -22,6 +22,7 @@ import settingsIcon from './icon--settings.svg';
 import styles from './stage-header.css';
 
 import FullscreenAPI from '../../lib/tw-fullscreen-api';
+import {isCompactEditor} from '../../lib/sp-mobile';
 
 const messages = defineMessages({
     largeStageSizeMessage: {
@@ -84,7 +85,7 @@ const StageHeaderComponent = function (props) {
 
     let header = null;
 
-    const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded);
+    const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen || isEmbedded, isPlayerOnly);
 
     if (isFullScreen || isEmbedded) {
         const settingsButton = isEmbedded && enableSettingsButton ? (
@@ -195,7 +196,9 @@ const StageHeaderComponent = function (props) {
             <Box
                 className={styles.stageHeaderWrapper}
                 // + 2 px because the stage will have 2 pixels of border around it
-                style={{minWidth: `${Math.max(stageDimensions.width, getMinWidth(stageSize)) + 2}px`}}
+                style={{minWidth: `${(isPlayerOnly || isCompactEditor() ?
+                    stageDimensions.width :
+                    Math.max(stageDimensions.width, getMinWidth(stageSize))) + 2}px`}}
             >
                 <Box className={styles.stageMenuWrapper}>
                     <Controls

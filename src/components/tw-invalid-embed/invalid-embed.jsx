@@ -30,16 +30,16 @@ const InvalidEmbed = () => (
             {'Here\'s an example of a full iframe to embed a project:'}
         </p>
         <p className={styles.code}>
-            {`<iframe src="https://turbowarp.org/60917032/embed" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen></iframe>`}
+            {`<iframe src="https://scratchpro-app.netlify.app/embed.html#60917032" width="482" height="412" allowtransparency="true" frameborder="0" scrolling="no" allowfullscreen></iframe>`}
         </p>
         <p>
             {'If you are seeing this page even though you aren\'t embedding anything, let us know on '}
             <a
-                href="https://scratch.mit.edu/users/GarboMuffin/#comments"
+                href="https://github.com/adrian-plumpton/ScratchPro/issues"
                 target="_blank"
                 rel="noreferrer"
             >
-                {'scratch.mit.edu/users/GarboMuffin'}
+                {'GitHub'}
             </a>
             {'.'}
         </p>

@@ -12,6 +12,7 @@ import Question from '../../containers/question.jsx';
 import MicIndicator from '../mic-indicator/mic-indicator.jsx';
 import {STAGE_DISPLAY_SIZES} from '../../lib/layout-constants.js';
 import {getStageDimensions, getMinWidth} from '../../lib/screen-utils.js';
+import {isCompactEditor} from '../../lib/sp-mobile';
 import styles from './stage.css';
 
 const StageComponent = props => {
@@ -35,9 +36,10 @@ const StageComponent = props => {
         ...boxProps
     } = props;
 
-    const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen);
-    const minWidth = getMinWidth(stageSize);
-    const transformStyle = stageDimensions.width < minWidth && !isFullScreen ? {
+    const stageDimensions = getStageDimensions(stageSize, customStageSize, isFullScreen, isPlayerOnly);
+    const fitsScreen = isPlayerOnly || isCompactEditor();
+    const minWidth = fitsScreen ? stageDimensions.width : getMinWidth(stageSize);
+    const transformStyle = stageDimensions.width < minWidth && !isFullScreen && !fitsScreen ? {
         transform: `translateX(${(minWidth - stageDimensions.width) / (isRtl ? -2 : 2)}px)`
     } : {};
 

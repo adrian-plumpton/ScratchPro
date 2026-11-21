@@ -4,4 +4,17 @@
   publish = "build"
 
 [build.environment]
+  NODE_ENV = "production"
   NODE_OPTIONS = "--max-old-space-size=4096"
+
+# Production script files have a content hash in their names, so they can be cached for good.
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# The service worker must always be checked for updates.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
