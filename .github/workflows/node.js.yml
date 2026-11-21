@@ -20,3 +20,8 @@ jobs:
     - run: npm ci
     - run: npm run build
     - run: npm run test:unit
+    - name: Play the sample games in a phone browser
+      run: |
+        npx playwright install --with-deps chromium
+        (cd build && python3 -m http.server 8601 >/dev/null 2>&1 &)
+        npm run test:smoke

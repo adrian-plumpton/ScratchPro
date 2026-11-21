@@ -16,13 +16,24 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
   remembered on that device.
 - Add `?touch=1` to a URL to try the touch experience on a computer (`?touch=0` turns it off).
 
-## Sample game
+## Sample games
 
-The first time the page loads, it opens **Spark Hop**, a small platformer that shows the
-on-screen controls: a joystick for the arrow keys, **Space** to jump and **X** to dash. Collect
-sparks for extra time and avoid the red blobs. **File > New** still starts a blank project.
-The game is built by `node scripts/build-sample-project.js`, which writes
-`src/lib/sample-project/spark-hop.sb3`.
+The home page has four sample games. **Play** starts one on the stage; **Remix** opens it in the editor.
+The first time the page loads, it opens **Spark Hop**. **File > New** still starts a blank project.
+
+| Game | What it shows |
+|---|---|
+| Spark Hop | Platformer: joystick, plus **Space** (jump) and **X** (dash) buttons |
+| Lane Dash | Racer: joystick, plus a **Space** boost button |
+| Bubble Pop | Tap-only game: no on-screen controls |
+| Gem Maze | Top-down maze: joystick only |
+
+The games are written in code: `scripts/sample-games/` has one file per game, built with a small
+block-writing toolkit (`builder.js`). Rebuild them with `npm run build:samples`, which writes
+`static/samples/<game>.sb3` and a preview picture `<game>.svg`. Card text is in `src/lib/sample-games.js`.
+
+`npm run test:smoke` plays every sample game in a phone-sized browser against a running site
+(`BASE_URL`, default `http://localhost:8601`). CI runs it on every push.
 
 ## Making games on phones and tablets
 

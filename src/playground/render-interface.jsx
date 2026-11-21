@@ -33,6 +33,7 @@ import GUI from './render-gui.jsx';
 import MenuBar from '../components/menu-bar/menu-bar.jsx';
 import ProjectInput from '../components/tw-project-input/project-input.jsx';
 import FeaturedProjects from '../components/tw-featured-projects/featured-projects.jsx';
+import SampleGames from '../components/sp-sample-games/sample-games.jsx';
 import Description from '../components/tw-description/description.jsx';
 import BrowserModal from '../components/browser-modal/browser-modal.jsx';
 import CloudVariableBadge from '../containers/tw-cloud-variable-badge.jsx';
@@ -287,7 +288,7 @@ class Interface extends React.Component {
                                 <p>
                                     <FormattedMessage
                                         // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a block-coding editor for making games that play well on phones and tablets, with touch controls. It is based on TurboWarp. Try it out by inputting a project ID or URL above or choosing a featured project below."
+                                        defaultMessage="{APP_NAME} is a block-coding editor for making games that play well on phones and tablets, with touch controls. It is based on TurboWarp. Try a sample game below, or load any Scratch project by entering its ID or URL above."
                                         description="Description of TurboWarp on the homepage"
                                         id="sp.home.description"
                                         values={{
@@ -295,6 +296,9 @@ class Interface extends React.Component {
                                         }}
                                     />
                                 </p>
+                            </div>
+                            <div className={styles.section}>
+                                <SampleGames />
                             </div>
                             <div className={styles.section}>
                                 <FeaturedProjects studio="27205657" />
