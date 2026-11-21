@@ -1,3 +1,59 @@
+# ScratchPro
+
+A block-coding editor for making games that play well on phones and tablets. Live at
+https://scratchpro-app.netlify.app. Based on [TurboWarp](https://turbowarp.org/)'s scratch-gui.
+ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundation or TurboWarp.
+
+## Playing on phones and tablets
+
+- **The stage fits the screen.** On the home page, the stage shrinks to the screen width, with a
+  game pad underneath and a **Play full screen** button.
+- **Full screen goes edge to edge.** The flag, stop and exit buttons float on top; browser full
+  screen and orientation lock are used where the device allows.
+- **On-screen controls set themselves up.** ScratchPro reads the keys a project's scripts use:
+  arrow keys (or WASD) go on a joystick, and other keys become labelled buttons (up to 6).
+  Games that only need taps get no controls. Players can hide the controls; the choice is
+  remembered on that device.
+- Add `?touch=1` to a URL to try the touch experience on a computer (`?touch=0` turns it off).
+
+## Making games on phones and tablets
+
+- **Phones:** the editor shows one pane at a time. Switch with the bar at the bottom: **Code** or
+  **Stage & sprites**, with **Play** in the middle to test with touch controls. The block palette
+  opens when you tap a category.
+- **Tablets:** the full editor is scaled to fit the screen.
+
+## Touch blocks
+
+Add the **Touch** extension (first in the extension library) for blocks made for touch games:
+
+| Block | What it does |
+|---|---|
+| `when joystick moved` | Runs when the on-screen joystick is pushed |
+| `joystick moved?` | True while the joystick is pushed |
+| `joystick direction` | Scratch direction (0 up, 90 right, -90 left, 180 down); keeps the last direction when released |
+| `joystick distance` | 0 to 100 |
+| `joystick x`, `joystick y` | -100 to 100 |
+| `finger on stage?`, `number of fingers` | Fingers touching the stage |
+| `finger (1) x`, `finger (1) y` | Stage position of each finger, oldest first |
+| `[hide/show] touch controls` | Hide the controls, eg. on a title screen |
+| `vibrate for (50) milliseconds` | Haptic feedback, where the device supports it |
+| `using touch screen?` | True on phones and tablets |
+
+A project that uses the joystick blocks gets a joystick even if it uses no arrow keys.
+
+## Development
+
+```bash
+npm ci
+npm start                              # dev server at http://localhost:8601
+NODE_ENV=production npm run build      # production build in build/
+```
+
+Netlify builds the site from `netlify.toml`.
+
+---
+
 scratch-gui modified for use in [TurboWarp](https://turbowarp.org/)
 
 ## Setup

@@ -84,6 +84,8 @@ class SPMobileEditor extends React.Component {
             prevState.view !== this.state.view) {
             this.sync();
         }
+        // Coming back from a full-screen game resizes the workspace; put the scripts back at the left.
+        if (prevProps.isFullScreen && !this.props.isFullScreen && this.isCompact) this.handleWorkspaceUpdate();
     }
     componentWillUnmount () {
         window.removeEventListener('orientationchange', this.handleOrientation);
