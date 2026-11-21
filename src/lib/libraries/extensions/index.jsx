@@ -58,12 +58,12 @@ import {APP_NAME} from '../../brand';
 
 export default [
     {
-        name: 'Touch',
+        name: 'Phone',
         extensionId: 'sptouch',
         // Loaded from this site; ScratchPro trusts its own extensions (see tw-security-manager).
         extensionURL: new URL(`${process.env.ROOT}extensions/sptouch.js`, location.href).href,
         iconURL: spTouchIcon,
-        description: 'Joystick, finger positions, vibration and on-screen controls for phone and tablet games.',
+        description: 'Joystick, swipes, tilt, vibration, saving high scores and on-screen controls for phone games.',
         tags: ['scratchpro'],
         incompatibleWithScratch: true,
         featured: true

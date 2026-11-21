@@ -19,8 +19,10 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
 ## Sample game
 
 The first time the page loads, it opens **Spark Hop**, a small platformer that shows the
-on-screen controls: a joystick for the arrow keys, **Space** to jump and **X** to dash. Collect
-sparks for extra time and avoid the red blobs. **File > New** still starts a blank project.
+on-screen controls: a joystick for the arrow keys, **Space** to jump and **X** to dash. On a
+phone you can also swipe up on the stage to jump and swipe sideways to dash. Collect sparks for
+extra time and avoid the red blobs; the phone buzzes when you collect one or get hit, and your
+best score is saved on the device. **File > New** still starts a blank project.
 The game is built by `node scripts/build-sample-project.js`, which writes
 `src/lib/sample-project/spark-hop.sb3`.
 
@@ -43,9 +45,10 @@ See `docs/ROADMAP.md` for goals and what comes next.
   opens when you tap a category.
 - **Tablets:** the full editor is scaled to fit the screen.
 
-## Touch blocks
+## Phone blocks
 
-Add the **Touch** extension (first in the extension library) for blocks made for touch games:
+Add the **Phone** extension (first in the extension library; it used to be called Touch, and
+projects that use it keep working) for blocks made for phone and tablet games:
 
 | Block | What it does |
 |---|---|
@@ -54,13 +57,30 @@ Add the **Touch** extension (first in the extension library) for blocks made for
 | `joystick direction` | Scratch direction (0 up, 90 right, -90 left, 180 down); keeps the last direction when released |
 | `joystick distance` | 0 to 100 |
 | `joystick x`, `joystick y` | -100 to 100 |
+| `when swiped [any/left/right/up/down]` | Runs when a finger (or the mouse) flicks across the stage |
+| `last swipe direction` | left, right, up or down |
 | `finger on stage?`, `number of fingers` | Fingers touching the stage |
 | `finger (1) x`, `finger (1) y` | Stage position of each finger, oldest first |
+| `when phone tilted [left/right/forward/back]` | Runs when the phone is tilted that way (about a third of the way) |
+| `phone tilted [left]?` | True while it is tilted that way; `any way` is also an option |
+| `tilt left/right`, `tilt forward/back` | -100 to 100; forward means the top of the screen tips away from you |
+| `make the way the phone is held now level` | Tilt is measured from how the phone is first held; this resets it |
+| `save (0) as [high score]` | Saves a value on this device, for this game |
+| `saved [high score]` | The saved value, or empty if nothing is saved |
+| `[high score] is saved?`, `delete saved [high score]` | |
 | `[hide/show] touch controls` | Hide the controls, eg. on a title screen |
-| `vibrate for (50) milliseconds` | Haptic feedback, where the device supports it |
-| `using touch screen?` | True on phones and tablets |
+| `vibrate for (50) milliseconds` | Haptic feedback, where the device supports it (not on iPhone) |
+| `using touch screen?`, `screen is portrait?` | |
 
 A project that uses the joystick blocks gets a joystick even if it uses no arrow keys.
+
+- **Tilt** works on phones and tablets. On iPhone and iPad the game asks for permission to use
+  motion the first time the player taps, but only if the game uses tilt blocks.
+- **Saves** stay on the device and belong to one game. A game is recognised by its Scratch
+  project ID, or otherwise by its sprite names, so the same game shares saves in the editor and
+  on the play page. Renaming sprites starts a fresh set of saves.
+- The Phone extension always loads from the site that is running the game, so games that use it
+  work offline and on any ScratchPro site.
 
 ## Development
 

@@ -31,7 +31,8 @@ Capable but simple: no clutter, nothing that gets in the way of making and playi
 | A | Automatic on-screen joystick and buttons from the keys a project uses | Done |
 | A | Touch blocks (joystick, fingers, vibrate, show/hide controls) | Done |
 | A | Phone editor: one pane at a time, bottom bar, Play button | Done |
-| A | More mobile blocks: tilt, swipe, save/load progress, orientation | To do |
+| A | Mobile blocks v1: tilt, swipe, save/load progress, portrait check (Phone extension) | Done |
+| A | Spark Hop uses them: swipe to jump/dash, vibration, saved best score | Done |
 | A | Game maker configures controls (layout, labels) saved in the project | To do |
 | A | Mobile stage presets (portrait/landscape) | To do |
 | B | Spark Hop sample game | Done |
@@ -66,8 +67,8 @@ What already existed when this roadmap was written:
 ## Next steps
 
 1. Decide the main audience, ambition and name (trademark check).
-2. Mobile blocks v1: tilt, swipe, save/load; update Spark Hop to use them.
-3. Two more templates.
+2. ~~Mobile blocks v1: tilt, swipe, save/load; update Spark Hop to use them.~~ Done.
+3. Two more templates (one using tilt).
 4. APK proof of concept: Spark Hop built by GitHub Actions.
 5. Publish → short link with a play page per game.
 6. Test on real Android and iPhone devices.

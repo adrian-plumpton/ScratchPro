@@ -7,7 +7,9 @@
 // - Other files on this site: served from the cache straight away and refreshed in the background.
 // - Other sites (eg. Scratch project downloads) are not cached.
 
-const CACHE = 'sp-play-v1';
+// Change the version when a cached file that is not content-hashed (eg. extensions/sptouch.js)
+// changes in a way the game depends on, so installed games do not run with an old copy.
+const CACHE = 'sp-play-v2';
 const PRECACHE = [
     'play.html',
     'play.webmanifest',

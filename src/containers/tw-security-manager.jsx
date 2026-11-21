@@ -160,7 +160,20 @@ const resetPermissions = () => {
     allowedGeolocation = false;
 };
 
+/**
+ * ScratchPro's own extensions are loaded from this site's copy, wherever the project was saved, so
+ * games keep working offline, on test sites and inside packaged apps.
+ * @param {string} url The extension's URL
+ * @returns {string} The URL to load
+ */
+const rewriteExtensionURL = url => {
+    if (!isScratchProExtension(url)) return url;
+    const file = new URL(url).pathname.split('/').pop();
+    return new URL(`${process.env.ROOT}extensions/${file}`, location.href).href;
+};
+
 const SECURITY_MANAGER_METHODS = [
+    'rewriteExtensionURL',
     'getSandboxMode',
     'canLoadExtensionFromProject',
     'canFetch',
@@ -289,6 +302,10 @@ class TWSecurityManagerComponent extends React.Component {
      * @param {string} url The extension's URL
      * @returns {string} The VM worker mode to use
      */
+    rewriteExtensionURL (url) {
+        return rewriteExtensionURL(url);
+    }
+
     getSandboxMode (url) {
         if (isTrustedExtension(url)) {
             log.info(`Loading extension ${url} unsandboxed`);

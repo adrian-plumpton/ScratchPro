@@ -227,6 +227,15 @@ const ypos = () => R(mk('motion_yposition'));
 const item = (list, index) => R(mk('data_itemoflist', {inputs: {INDEX: index}, fields: {LIST: [list, lists[list]]}}));
 const lengthOf = list => R(mk('data_lengthoflist', {fields: {LIST: [list, lists[list]]}}));
 const playing = () => eq(v('state'), 'play');
+const or = (a, b) => cmp('operator_or', a, b);
+
+// Phone blocks (the sptouch extension)
+const PHONE = 'sptouch';
+const whenSwiped = direction => mk(`${PHONE}_whenSwiped`, {fields: {DIRECTION: [direction, null]}});
+const vibrate = ms => mk(`${PHONE}_vibrate`, {inputs: {MS: ms}});
+const saveAs = (value, name) => mk(`${PHONE}_save`, {inputs: {VALUE: value, NAME: name}});
+const saved = name => R(mk(`${PHONE}_load`, {inputs: {NAME: name}}));
+const isSaved = name => Bool(mk(`${PHONE}_isSaved`, {inputs: {NAME: name}}));
 
 // Statements
 const setv = (name, value) => mk('data_setvariableto', {inputs: {VALUE: value},
@@ -307,8 +316,9 @@ const varsOf = (ids, values = {}) => {
     return out;
 };
 
-const stageVarIds = declare(['Sparks', 'Time', 'state'], variables, 'v');
-const playerVarIds = declare(['vx', 'vy', 'ground', 'dash', 'dash wait', 'face', 'hurt', 'move'], variables, 'v');
+const stageVarIds = declare(['Sparks', 'Time', 'Best', 'state'], variables, 'v');
+const playerVarIds = declare(['vx', 'vy', 'ground', 'dash', 'dash wait', 'face', 'hurt', 'move',
+    'swipe jump', 'swipe dash'], variables, 'v');
 const sparkVarIds = declare(['spot'], variables, 'v');
 const blobVarIds = declare(['speed', 'left', 'right'], variables, 'v');
 declare(['spot x', 'spot y'], lists, 'l');
@@ -328,18 +338,28 @@ script(whenFlag(), [
     setv('state', 'play'),
     setv('Sparks', 0),
     setv('Time', 60),
+    // The best score is saved on this phone, so it is still there next time.
+    ifElse(isSaved('best sparks'), [
+        setv('Best', saved('best sparks'))
+    ], [
+        setv('Best', 0)
+    ]),
     repeatUntil(lt(v('Time'), 1), [
         wait(1),
         chg('Time', -1)
     ]),
     setv('Time', 0),
     setv('state', 'over'),
+    ifThen(gt(v('Sparks'), v('Best')), [
+        setv('Best', v('Sparks')),
+        saveAs(v('Sparks'), 'best sparks')
+    ]),
     broadcast('game over')
 ]);
 targets.push({
     isStage: true,
     name: 'Stage',
-    variables: varsOf(stageVarIds, {Sparks: 0, Time: 60, state: 'play'}),
+    variables: varsOf(stageVarIds, {Sparks: 0, Time: 60, Best: 0, state: 'play'}),
     lists: {
         [lists['spot x']]: ['spot x', SPOTS.map(s => s[0])],
         [lists['spot y']]: ['spot y', SPOTS.map(s => s[1])]
@@ -409,6 +429,7 @@ script(whenClone(), [
         ifThen(and(touching('Player'), playing()), [
             chg('Sparks', 1),
             chg('Time', 1),
+            vibrate(25),
             repeat(5, [changeSize(14), changeEffect('ghost', 20)]),
             setSize(100),
             clearEffects(),
@@ -473,10 +494,12 @@ define('step', true, [
         setv('face', v('move')),
         point(mul(90, v('move')))
     ]),
-    ifThen(and(and(key('x'), eq(v('dash wait'), 0)), playing()), [
+    // X or a sideways swipe dashes.
+    ifThen(and(and(or(key('x'), gt(v('swipe dash'), 0)), eq(v('dash wait'), 0)), playing()), [
         setv('dash', 6),
         setv('dash wait', 30)
     ]),
+    setv('swipe dash', 0),
     ifThen(gt(v('dash wait'), 0), [chg('dash wait', -1)]),
     ifElse(gt(v('dash'), 0), [
         chg('dash', -1),
@@ -485,8 +508,8 @@ define('step', true, [
     ], [
         setv('vx', add(mul(v('vx'), 0.75), mul(v('move'), 1.6))),
         chg('vy', -1),
-        // Let go of jump early for a short hop.
-        ifThen(and(not(key('space')), gt(v('vy'), 4)), [setv('vy', 4)]),
+        // Let go of jump early for a short hop. (A swipe up counts as holding jump for a moment.)
+        ifThen(and(not(or(key('space'), gt(v('swipe jump'), 0))), gt(v('vy'), 4)), [setv('vy', 4)]),
         ifThen(lt(v('vy'), -12), [setv('vy', -12)])
     ]),
     // Move sideways, and undo the move if it ran into a platform.
@@ -508,10 +531,12 @@ define('step', true, [
     ], [
         ifThen(gt(v('ground'), 0), [chg('ground', -1)])
     ]),
-    ifThen(and(and(key('space'), gt(v('ground'), 0)), playing()), [
+    // Space or a swipe up jumps.
+    ifThen(and(and(or(key('space'), gt(v('swipe jump'), 0)), gt(v('ground'), 0)), playing()), [
         setv('vy', 13),
         setv('ground', 0)
     ]),
+    ifThen(gt(v('swipe jump'), 0), [chg('swipe jump', -1)]),
     ifThen(lt(ypos(), -170), [
         gotoXY(-200, -125),
         setv('vy', 0)
@@ -521,6 +546,7 @@ define('step', true, [
     ifThen(and(and(touching('Blob'), eq(v('hurt'), 0)), playing()), [
         setv('hurt', 45),
         chg('Time', -5),
+        vibrate(150),
         setv('vy', 9),
         setv('vx', mul(-7, v('face')))
     ]),
@@ -545,14 +571,29 @@ script(whenFlag(), [
     setv('dash wait', 0),
     setv('face', 1),
     setv('hurt', 0),
+    setv('swipe jump', 0),
+    setv('swipe dash', 0),
     forever([call('step', true)])
 ]);
 script(whenFlag(), [
     sayFor('Collect the sparks! Each one adds a second.', 3),
-    sayFor('Move with the joystick. Space jumps, X dashes.', 3)
+    sayFor('Move with the joystick. Space or swipe up to jump, X or swipe sideways to dash.', 4)
+]);
+// Swipes on the stage (Phone blocks): up jumps, left or right dashes that way.
+script(whenSwiped('up'), [setv('swipe jump', 12)]);
+script(whenSwiped('left'), [
+    setv('face', -1),
+    point(-90),
+    setv('swipe dash', 1)
+]);
+script(whenSwiped('right'), [
+    setv('face', 1),
+    point(90),
+    setv('swipe dash', 1)
 ]);
 script(whenReceive('game over'), [
-    say(join('Time! You got ', join(v('Sparks'), ' sparks. Press the green flag to play again.')))
+    say(join('Time! You got ', join(v('Sparks'), join(' sparks. Best: ',
+        join(v('Best'), '. Press the green flag to play again.')))))
 ]);
 targets.push(sprite('Player', {
     variables: varsOf(playerVarIds, {face: 1}),
@@ -583,8 +624,10 @@ const monitor = (name, x, y) => ({
 
 const project = {
     targets,
-    monitors: [monitor('Sparks', 5, 5), monitor('Time', 5, 32)],
-    extensions: [],
+    monitors: [monitor('Sparks', 5, 5), monitor('Time', 5, 32), monitor('Best', 5, 59)],
+    extensions: [PHONE],
+    // Loaded from whichever ScratchPro site is running the game (see tw-security-manager).
+    extensionURLs: {[PHONE]: `https://scratchpro-app.netlify.app/extensions/${PHONE}.js`},
     meta: {semver: '3.0.0', vm: '0.2.0', agent: 'ScratchPro sample builder'}
 };
 
