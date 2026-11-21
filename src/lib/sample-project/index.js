@@ -6,7 +6,8 @@
 import sampleProject from '!arraybuffer-loader!./spark-hop.sb3';
 /* eslint-enable import/no-unresolved */
 
-let firstLoad = true;
+// editor.html?blank (the home page's "Start a new game") skips the sample and opens an empty project.
+let firstLoad = !(typeof location !== 'undefined' && new URLSearchParams(location.search).has('blank'));
 
 /**
  * Call once per project load. Returns the sample game for the very first load of the default

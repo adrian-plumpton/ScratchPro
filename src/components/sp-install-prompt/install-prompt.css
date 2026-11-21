@@ -1,0 +1,61 @@
+/* ScratchPro: "Install game" button on the play page. Sits at the top centre, below the floating
+   flag/stop buttons' row height, and clear of the notch. */
+.wrapper {
+    position: fixed;
+    left: 50%;
+    top: calc(env(safe-area-inset-top, 0px) + 56px);
+    transform: translateX(-50%);
+    z-index: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    pointer-events: none;
+}
+
+.pill {
+    display: flex;
+    align-items: center;
+    background: #4f46e5;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+}
+
+.install {
+    border: none;
+    background: none;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    padding: 10px 6px 10px 16px;
+    cursor: pointer;
+}
+
+.close {
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 20px;
+    line-height: 1;
+    padding: 8px 14px 8px 8px;
+    cursor: pointer;
+}
+
+.help {
+    background: white;
+    color: #1e1b4b;
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    max-width: 260px;
+    text-align: center;
+    pointer-events: auto;
+}
+
+.share-icon {
+    display: inline-block;
+    font-weight: bold;
+}

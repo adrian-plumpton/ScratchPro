@@ -24,6 +24,18 @@ sparks for extra time and avoid the red blobs. **File > New** still starts a bla
 The game is built by `node scripts/build-sample-project.js`, which writes
 `src/lib/sample-project/spark-hop.sb3`.
 
+## Installable games (play.html)
+
+`play.html` is Spark Hop on its own: full screen with touch controls and no editor. It has its
+own app manifest (`static/play.webmanifest`), so it can be installed to a phone's home screen
+(the page shows an **Install game** button, or Share > Add to Home Screen on iPhone). Its service
+worker (`static/play-sw.js`, scoped to the play page only) caches the game so it works offline.
+`play.html#123456` plays a Scratch project by ID (needs a connection).
+
+`editor.html?blank` opens the editor with an empty project instead of Spark Hop.
+
+See `docs/ROADMAP.md` for goals and what comes next.
+
 ## Making games on phones and tablets
 
 - **Phones:** the editor shows one pane at a time. Switch with the bar at the bottom: **Code** or
