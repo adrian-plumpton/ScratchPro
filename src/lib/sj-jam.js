@@ -15,6 +15,7 @@
 import {createClient} from '@liveblocks/client';
 import {loadJamSnapshot, saveJamSnapshot} from './sj-jam-api';
 import {filterChat} from './sj-chat-filter';
+import {attachPaint} from './sj-jam-paint';
 import log from './log';
 
 const BLOCK_EVENTS = ['create', 'delete', 'move', 'change', 'var_create', 'var_rename', 'var_delete'];
@@ -122,7 +123,8 @@ const addActivity = text => {
 // What the game looks like structurally: changing any of this sends the whole game.
 const structureOf = vm => JSON.stringify(vm.runtime.targets.filter(t => t.isOriginal).map(t => [
     targetName(t),
-    t.getCostumes().map(c => [c.name, c.assetId, c.rotationCenterX, c.rotationCenterY]),
+    // Costume pictures sync by themselves (sj-jam-paint.js); adding, removing or renaming costumes doesn't.
+    t.getCostumes().map(c => c.name),
     t.getSounds().map(s => [s.name, s.assetId])
 ])
     .concat([vm.extensionManager ? [...vm.extensionManager._loadedExtensions.keys()].sort() : []]));
@@ -214,6 +216,17 @@ class JamSession {
         this.vm.on('targetsUpdate', this.handleTargetsUpdate);
         this.vm.on('PROJECT_CHANGED', this.handleProjectChanged);
         this.attachWorkspace();
+        this.paint = attachPaint({
+            vm: this.vm,
+            broadcast: event => this.room && this.room.broadcastEvent(event),
+            isApplying: () => this.applyingRemote,
+            setApplying: on => {
+                this.applyingRemote = on;
+            },
+            requestFullSync: () => this.syncGame(true),
+            colorOf: connectionId => (state.others.find(o => o.connectionId === connectionId) || {}).color ||
+                '#c9a7ff'
+        });
 
         if (this.needsGame) await this.fetchGame();
         this.lastStructure = structureOf(this.vm);
@@ -389,10 +402,10 @@ class JamSession {
         this.gameTimer = setTimeout(() => this.syncGame(), GAME_SYNC_DELAY);
     }
 
-    async syncGame () {
+    async syncGame (force) {
         if (this.applyingRemote || !this.room) return;
         const structure = structureOf(this.vm);
-        if (structure !== this.lastStructure) {
+        if (force || structure !== this.lastStructure) {
             this.lastStructure = structure;
             this.lastProps = propsOf(this.vm);
             try {
@@ -444,6 +457,10 @@ class JamSession {
         }
         if (event.type === 'chat') {
             this.receiveChat(event, user, connectionId);
+            return;
+        }
+        if (event.type === 'paint-live' || event.type === 'paint-live-end' || event.type === 'paint-ops') {
+            if (this.paint && this.loaded) this.paint.handle(event, connectionId);
             return;
         }
         if (event.type === 'rtc' || event.type === 'call-control') {
@@ -702,6 +719,8 @@ class JamSession {
     }
 
     stop () {
+        if (this.paint) this.paint.detach();
+        this.paint = null;
         cancelAnimationFrame(this.dragLoop);
         [...this.ghosts.keys()].forEach(key => this.removeGhost(key));
         clearTimeout(this.gameTimer);

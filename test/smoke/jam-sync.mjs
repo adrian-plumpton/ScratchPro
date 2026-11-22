@@ -238,6 +238,57 @@ await b.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Slim
 check(await b.evaluate(() => vm.runtime.targets.some(t => t.getName() === 'Slime')),
     'Bigger changes (renaming a sprite) reach the other editor');
 
+// Drawing costumes together. Both open Player's costume in the paint editor.
+for (const page of [a, b]) {
+    await page.bringToFront();
+    await page.evaluate(() => vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Player').id));
+    await page.getByRole('tab', {name: /Costumes/}).click();
+    await page.locator('canvas[class*="paper-canvas_paper-canvas"]').waitFor();
+    await page.locator('img[alt="Brush"]').first()
+        .click();
+}
+await a.waitForTimeout(1500);
+const canvasBox = page => page.evaluate(() => {
+    const box = document.querySelector('canvas[class*="paper-canvas_paper-canvas"]').getBoundingClientRect();
+    return {x: box.left, y: box.top, w: box.width, h: box.height};
+});
+const drawingOf = page => page.evaluate(() => window.__sjPaint.hashes().join());
+const startDrawing = await drawingOf(b);
+const draw = async (page, box, fx, fy, finish = true) => {
+    await page.mouse.move(box.x + (box.w * fx), box.y + (box.h * fy));
+    await page.mouse.down();
+    for (let i = 1; i <= 10; i++) await page.mouse.move(box.x + (box.w * (fx + (i * 0.015))), box.y + (box.h * fy));
+    if (finish) await page.mouse.up();
+};
+// A draws; part-way through, B sees the stroke live.
+await a.bringToFront();
+const aBox = await canvasBox(a);
+await draw(a, aBox, 0.3, 0.3, false);
+await b.waitForTimeout(500);
+check(await b.evaluate(() => [...document.querySelectorAll('body > canvas')].some(c => c.style.display === 'block')),
+    'B sees A\'s pen stroke live while A draws');
+await a.mouse.up();
+await b.waitForTimeout(1800);
+const afterA = await drawingOf(a);
+check(afterA !== startDrawing && await drawingOf(b) === afterA, 'A\'s finished stroke lands in B\'s drawing');
+// Both draw at once: both strokes are kept for both.
+const bBox = await canvasBox(b);
+await a.bringToFront();
+await draw(a, aBox, 0.3, 0.6, false);
+await b.bringToFront();
+await draw(b, bBox, 0.6, 0.6, true);
+await a.bringToFront();
+await a.mouse.up();
+await a.waitForTimeout(2500);
+const [aDrawing, bDrawing] = [await drawingOf(a), await drawingOf(b)];
+check(aDrawing === bDrawing && aDrawing !== afterA,
+    'Strokes drawn at the same time end up in both drawings');
+for (const page of [a, b]) {
+    await page.bringToFront();
+    await page.getByRole('tab', {name: /Code/}).click();
+}
+await a.waitForTimeout(800);
+
 // Who's working where: A sees B's face on the sprite B is on.
 await b.evaluate(() => vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Spark').id));
 await a.bringToFront();
