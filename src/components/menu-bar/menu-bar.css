@@ -240,3 +240,52 @@
         display: none;
     }
 }
+
+/* Sparkjam: wordmark and the Jam / Sign in buttons (design M1). */
+.sj-wordmark {
+    display: flex;
+    align-items: center;
+    padding: 0 14px 0 6px;
+    font: 400 15px "Press Start 2P", monospace;
+    letter-spacing: 1px;
+    color: #fff;
+    text-decoration: none;
+    text-shadow: 2px 2px 0 #ff2e88;
+    white-space: nowrap;
+}
+
+.sj-wordmark-a {
+    color: #ffe14d;
+}
+
+.sj-button {
+    margin-left: 10px;
+    padding: 9px 11px;
+    border: 0;
+    border-radius: 0;
+    font: 400 9px "Press Start 2P", monospace;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.sj-jam {
+    background: #36f9c6;
+    color: #14001f;
+    box-shadow: 3px 3px 0 #3b0a5a;
+}
+
+.sj-sign-in {
+    background: transparent;
+    color: #fff;
+    box-shadow: inset 0 0 0 2px #fff;
+}
+
+.sj-button:active {
+    transform: translate(2px, 2px);
+}
+
+@media (max-width: 1100px) {
+    .sj-wordmark {
+        display: none;
+    }
+}

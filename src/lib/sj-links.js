@@ -10,7 +10,7 @@ const links = {
     scratchGame: id => `${root}game#${id}`,
     remixSample: id => `${root}editor.html?sample=${encodeURIComponent(id)}`,
     remixScratch: id => `${root}editor.html#${id}`,
-    newGame: `${root}editor.html?blank`,
+    newGame: `${root}editor.html?new`,
     credits: `${root}credits.html`,
     source: 'https://github.com/adrian-plumpton/scratchpro',
     turbowarp: 'https://turbowarp.org/',

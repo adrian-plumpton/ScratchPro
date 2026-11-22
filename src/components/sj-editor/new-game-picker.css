@@ -1,0 +1,186 @@
+/* Sparkjam "Start a new game" picker (design M4). */
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 600;
+    background: rgba(20, 0, 31, 0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    font-family: var(--body);
+    color: #f4efff;
+}
+
+.backdrop *,
+.backdrop *::before,
+.backdrop *::after {
+    box-sizing: border-box;
+}
+
+.modal {
+    width: 100%;
+    max-width: 1080px;
+    max-height: 100%;
+    overflow: auto;
+    background: var(--night);
+    border: 3px solid var(--edge);
+    border-radius: 14px;
+    padding: 30px 34px;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.title {
+    margin: 0;
+    font: 400 22px/1.3 var(--px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--pink);
+}
+
+.close {
+    all: unset;
+    cursor: pointer;
+    margin-left: auto;
+    font-size: 22px;
+    padding: 6px 10px;
+    color: #fff;
+}
+
+.close:focus-visible,
+.card:focus-visible,
+.link:focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+}
+
+.sub {
+    margin: 10px 0 24px;
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.card {
+    all: unset;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    background: var(--card);
+    border: 3px solid var(--edge);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card:hover {
+    border-color: var(--lav);
+}
+
+.on,
+.on:hover {
+    border-color: var(--yellow);
+    box-shadow: 0 0 0 2px var(--yellow);
+}
+
+.art,
+.blank-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-bottom: 3px solid var(--edge);
+}
+
+.blank-art {
+    display: grid;
+    place-items: center;
+    background-color: #0f0419;
+    background-image: radial-gradient(#2b1546 1.3px, transparent 1.3px);
+    background-size: 18px 18px;
+}
+
+.body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+}
+
+.name {
+    font: 400 11px var(--px);
+    color: #fff;
+}
+
+.text {
+    font-size: 14px;
+    line-height: 1.35;
+    color: #d8ccef;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tags span {
+    font: 400 7px var(--px);
+    padding: 6px 7px;
+    border: 2px solid #4a2b78;
+    color: #cdbfe8;
+}
+
+.error {
+    margin: 16px 0 0;
+    color: var(--pink);
+}
+
+.foot {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 2px solid var(--line);
+}
+
+.link {
+    all: unset;
+    cursor: pointer;
+    color: #f4efff;
+    text-decoration: underline;
+    font-size: 15px;
+}
+
+.start {
+    margin-left: auto;
+}
+
+@media (max-width: 900px) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modal {
+        padding: 20px 16px;
+    }
+
+    .title {
+        font-size: 15px;
+    }
+
+    .start {
+        width: 100%;
+        margin-left: 0;
+    }
+}

@@ -13,10 +13,8 @@ const systemPreferencesTheme = () => {
     if (PREFERS_HIGH_CONTRAST_QUERY && PREFERS_HIGH_CONTRAST_QUERY.matches) {
         return Theme.highContrast;
     }
-    if (PREFERS_DARK_QUERY && PREFERS_DARK_QUERY.matches) {
-        return Theme.dark;
-    }
-    return Theme.light;
+    // Sparkjam: one look for everyone, dark like the rest of the site. Light mode is in Settings.
+    return Theme.sparkjam;
 };
 
 /**

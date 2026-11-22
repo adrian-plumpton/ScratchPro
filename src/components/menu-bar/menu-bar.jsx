@@ -84,6 +84,9 @@ import {setFileHandle} from '../../reducers/tw.js';
 import collectMetadata from '../../lib/collect-metadata';
 
 import styles from './menu-bar.css';
+import {SoonDialog} from '../sj/site.jsx';
+import sj from '../sj/sj.css';
+import {links} from '../../lib/sj-links';
 
 import helpIcon from '../../lib/assets/icon--tutorials.svg';
 import mystuffIcon from './icon--mystuff.png';
@@ -210,7 +213,12 @@ MenuItemLink.propTypes = {
 class MenuBar extends React.Component {
     constructor (props) {
         super(props);
+        // Sparkjam: Start a jam and Sign in explain they are coming soon.
+        this.state = {soon: null};
         bindAll(this, [
+            'handleSoonJam',
+            'handleSoonSignIn',
+            'handleCloseSoon',
             'handleClickSeeInside',
             'handleClickNew',
             'handleClickNewWindow',
@@ -253,6 +261,15 @@ class MenuBar extends React.Component {
     handleClickNewWindow () {
         this.props.onClickNewWindow();
         this.props.onRequestCloseFile();
+    }
+    handleSoonJam () {
+        this.setState({soon: 'jam'});
+    }
+    handleSoonSignIn () {
+        this.setState({soon: 'signin'});
+    }
+    handleCloseSoon () {
+        this.setState({soon: null});
     }
     handleClickRemix () {
         this.props.onClickRemix();
@@ -490,6 +507,14 @@ class MenuBar extends React.Component {
                 )}
             >
                 <div className={styles.mainMenu}>
+                    <a
+                        className={styles.sjWordmark}
+                        href={links.home}
+                        aria-label="Sparkjam home"
+                    >
+                        <span className={styles.sjWordmarkA}>{'SPARK'}</span>
+                        <span>{'JAM'}</span>
+                    </a>
                     <div className={styles.fileGroup}>
                         {this.props.errors.length > 0 && <div>
                             <MenuLabel
@@ -1034,7 +1059,23 @@ class MenuBar extends React.Component {
                     <TWSaveStatus
                         showSaveFilePicker={this.props.showSaveFilePicker}
                     />
+                    <button
+                        className={classNames(styles.sjButton, styles.sjJam)}
+                        onClick={this.handleSoonJam}
+                    >{'▶ START A JAM'}</button>
+                    <button
+                        className={classNames(styles.sjButton, styles.sjSignIn)}
+                        onClick={this.handleSoonSignIn}
+                    >{'SIGN IN'}</button>
                 </div>
+                {this.state.soon ? (
+                    <div className={sj.tokens}>
+                        <SoonDialog
+                            what={this.state.soon}
+                            onClose={this.handleCloseSoon}
+                        />
+                    </div>
+                ) : null}
 
                 {aboutButton}
             </Box>

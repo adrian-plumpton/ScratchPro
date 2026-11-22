@@ -7,7 +7,9 @@ import {connect} from 'react-redux';
 import check from './check.svg';
 import dropdownCaret from './dropdown-caret.svg';
 import {MenuItem, Submenu} from '../menu/menu.jsx';
-import {BLOCKS_CUSTOM, BLOCKS_DARK, BLOCKS_HIGH_CONTRAST, BLOCKS_THREE, Theme} from '../../lib/themes/index.js';
+import {
+    BLOCKS_CUSTOM, BLOCKS_DARK, BLOCKS_HIGH_CONTRAST, BLOCKS_SPARKJAM, BLOCKS_THREE, Theme
+} from '../../lib/themes/index.js';
 import {openBlocksThemeMenu, blocksThemeMenuOpen, closeSettingsMenu} from '../../reducers/menus.js';
 import {setTheme} from '../../reducers/theme.js';
 import {persistTheme} from '../../lib/themes/themePersistance.js';
@@ -16,9 +18,15 @@ import threeIcon from './tw-blocks-three.svg';
 import highContrastIcon from './tw-blocks-high-contrast.svg';
 import darkIcon from './tw-blocks-dark.svg';
 import customIcon from './tw-blocks-custom.svg';
+import sparkjamIcon from './sj-blocks-sparkjam.svg';
 import openLinkIcon from './tw-open-link.svg';
 
 const options = defineMessages({
+    [BLOCKS_SPARKJAM]: {
+        defaultMessage: 'Sparkjam',
+        description: 'Name of the bright Sparkjam block colors, used by default.',
+        id: 'sj.blockColors.sparkjam'
+    },
     [BLOCKS_THREE]: {
         defaultMessage: 'Original',
         description: 'Name of normal Scratch block colors.',
@@ -42,6 +50,7 @@ const options = defineMessages({
 });
 
 const icons = {
+    [BLOCKS_SPARKJAM]: sparkjamIcon,
     [BLOCKS_THREE]: threeIcon,
     [BLOCKS_HIGH_CONTRAST]: highContrastIcon,
     [BLOCKS_DARK]: darkIcon,
@@ -121,6 +130,7 @@ const BlocksThemeMenu = ({
         </div>
         <Submenu place={isRtl ? 'left' : 'right'}>
             {[
+                BLOCKS_SPARKJAM,
                 BLOCKS_THREE,
                 BLOCKS_HIGH_CONTRAST,
                 BLOCKS_DARK,

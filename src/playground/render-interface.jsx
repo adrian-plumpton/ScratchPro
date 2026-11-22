@@ -44,6 +44,7 @@ import {SiteNav, SiteFooter, SoonDialog, styles as sj} from '../components/sj/si
 import {GameSide, Crumb, MoreGames} from '../components/sj-game/game-page.jsx';
 import gameStyles from '../components/sj-game/game-page.css';
 import {requestedSample} from '../lib/sample-project';
+import NewGamePicker from '../components/sj-editor/new-game-picker.jsx';
 
 import styles from './interface.css';
 
@@ -162,6 +163,7 @@ class Interface extends React.Component {
                         />
                         <SPTouchControls />
                         <SPMobileEditor />
+                        {isEditor ? <NewGamePicker /> : null}
                         {isHomepage && !isBrowserSupported() ? (
                             <BrowserModal isRtl={isRtl} />
                         ) : null}

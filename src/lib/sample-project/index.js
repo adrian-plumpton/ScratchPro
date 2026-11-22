@@ -10,8 +10,9 @@ import {SAMPLE_GAMES, sampleFileUrl} from '../sample-games';
 
 const params = typeof location === 'undefined' ? new URLSearchParams() : new URLSearchParams(location.search);
 
-// editor.html?blank ("Start a new game") skips the sample and opens an empty project.
-let firstLoad = !params.has('blank');
+// editor.html?blank and editor.html?new (Start making, which shows the new game picker) skip the
+// sample and open an empty project.
+let firstLoad = !params.has('blank') && !params.has('new');
 
 /**
  * The sample game named in the page's ?sample= parameter, if it is one of ours.

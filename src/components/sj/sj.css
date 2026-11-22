@@ -1,6 +1,7 @@
 /* Sparkjam: brand tokens and the pieces every page shares (buttons, nav, footer, game cards, dialogs). */
 
-.page {
+.page,
+.tokens {
     --night: #14001f;
     --plum: #2a0a3f;
     --purple: #3b0a5a;
@@ -19,7 +20,9 @@
     --px: "Press Start 2P", monospace;
     --vt: "VT323", monospace;
     --body: "Space Grotesk", system-ui, sans-serif;
+}
 
+.page {
     min-height: 100vh;
     background: var(--night);
     color: #f4efff;

@@ -4,7 +4,7 @@ import {FormattedMessage} from 'react-intl';
 import {connect} from 'react-redux';
 
 import {MenuItem} from '../menu/menu.jsx';
-import {GUI_DARK, GUI_LIGHT, Theme} from '../../lib/themes/index.js';
+import {GUI_LIGHT, GUI_SPARKJAM, Theme} from '../../lib/themes/index.js';
 import {closeSettingsMenu} from '../../reducers/menus.js';
 import {setTheme} from '../../reducers/theme.js';
 import {persistTheme} from '../../lib/themes/themePersistance.js';
@@ -19,17 +19,18 @@ const GuiThemeMenu = ({
     <MenuItem>
         <div
             className={styles.option}
+            // Sparkjam: dark means the Sparkjam look.
             // eslint-disable-next-line react/jsx-no-bind
-            onClick={() => onChangeTheme(theme.set('gui', theme.gui === GUI_DARK ? GUI_LIGHT : GUI_DARK))}
+            onClick={() => onChangeTheme(theme.set('gui', theme.isDark() ? GUI_LIGHT : GUI_SPARKJAM))}
         >
             <img
-                src={theme.gui === GUI_DARK ? lightModeIcon : darkModeIcon}
+                src={theme.isDark() ? lightModeIcon : darkModeIcon}
                 draggable={false}
                 width={24}
                 height={24}
             />
             <span className={styles.submenuLabel}>
-                {theme.gui === GUI_DARK ? (
+                {theme.isDark() ? (
                     <FormattedMessage
                         defaultMessage="Switch To Light Mode"
                         description="Menu item to change color scheme to light (it is currently dark)"
