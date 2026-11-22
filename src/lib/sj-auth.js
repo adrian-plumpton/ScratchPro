@@ -1,6 +1,6 @@
 // Sparkjam: accounts, using Netlify Identity (@netlify/identity). An account needs a maker name and
 // a birth month and year before it can save; under-13s also need a parent's OK (a placeholder for
-// now, see ACCOUNTS.md). Pages call startAuth() once to finish sign-in links and keep everyone in sync.
+// now, see docs/ACCOUNTS.md). Pages call startAuth() once to finish sign-in links and keep everyone in sync.
 
 import {
     getUser,

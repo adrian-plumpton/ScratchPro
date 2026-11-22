@@ -69,10 +69,10 @@ const Field = ({label, ...props}) => (
 Field.propTypes = {label: PropTypes.string};
 
 // 1. Choose how to sign in.
-const ChooseStep = ({reason, options, onDone}) => {
+const ChooseStep = ({reason, options, initialError, onDone}) => {
     const [mode, setMode] = useState('signin');
     const [busy, setBusy] = useState(false);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(initialError || '');
     const [notice, setNotice] = useState('');
     const submit = async e => {
         e.preventDefault();
@@ -199,6 +199,7 @@ const ChooseStep = ({reason, options, onDone}) => {
     );
 };
 ChooseStep.propTypes = {
+    initialError: PropTypes.string,
     reason: PropTypes.string,
     options: PropTypes.shape({google: PropTypes.bool, signupOpen: PropTypes.bool, unavailable: PropTypes.bool}),
     onDone: PropTypes.func
@@ -487,6 +488,7 @@ const AccountDialog = () => {
     const [callback, setCallback] = useState(null);
     const [options, setOptions] = useState({google: false, signupOpen: false});
     const [dismissed, setDismissed] = useState(false);
+    const [linkError, setLinkError] = useState('');
     const boxRef = useRef(null);
 
     useEffect(() => {
@@ -499,7 +501,11 @@ const AccountDialog = () => {
         authOptions().then(setOptions);
         startAuth().then(() => {
             const pending = takePendingCallback();
-            if (pending && pending.type !== 'error') {
+            if (pending && pending.type === 'error') {
+                // A sign-in link or Google sign-in that didn't work: say so.
+                setLinkError(errorText(pending.error));
+                setOpen(true);
+            } else if (pending) {
                 setCallback(pending);
                 setOpen(true);
             }
@@ -551,6 +557,7 @@ const AccountDialog = () => {
             <ChooseStep
                 reason={reason}
                 options={options}
+                initialError={linkError}
                 onDone={() => {}}
             />
         );

@@ -27,6 +27,9 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
 | `editor.html?new` | Start making: asks which template to start from (four samples or blank). |
 | `/my-games` (`my-games.html`) | Games saved in this browser. The editor saves a couple of seconds after each change; `editor.html?game=<id>` reopens one. |
 
+Accounts (sign in with Google or email, saving games online) use Netlify Identity and a Netlify
+Function; see `docs/ACCOUNTS.md`.
+
 The editor uses the Sparkjam theme by default (`src/lib/themes/*/sparkjam.js`); TurboWarp's light and dark
 looks and Scratch's block colours are still in Settings. Full-screen play on phones has exit and pause
 buttons, with a pause menu.
