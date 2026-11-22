@@ -30,6 +30,11 @@ const SOON = {
             'Until then you can make and play without one, and save games to your device from ' +
             'the editor\'s File menu.'
     },
+    package: {
+        say: 'Making apps is coming soon!',
+        small: 'Soon you will be able to turn your game into an app that friends can install on phones, ' +
+            'tablets and computers. For now, use File > Save to your computer to keep a copy.'
+    },
     jam: {
         say: 'Jams are coming soon!',
         small: 'Soon you will be able to open a jam from any game and build it live with friends you ' +

@@ -17,6 +17,7 @@ import {
 import {startJam, getJam, removeFromJam, endJam, jamLink, parseJamCode} from '../../lib/sj-jam-api';
 import {links} from '../../lib/sj-links';
 import {getIsShowingProject} from '../../reducers/project-state';
+import {JamTalk, TalkButton} from './jam-talk.jsx';
 import styles from './jam-ui.css';
 
 // Local testing only (see test/smoke/jam-sync.mjs): a test can stand in for the jams API.
@@ -367,6 +368,7 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     const [invite, setInvite] = useState(false);
     const [people, setPeople] = useState(false);
     const [ending, setEnding] = useState(false);
+    const [talk, setTalk] = useState(false);
     const [starting, setStarting] = useState(false);
     const [problem, setProblem] = useState('');
     const autoDone = useRef(false);
@@ -454,6 +456,10 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
                     ))}
                     {everyone.length > 4 ? <span className={styles.more}>{`+${everyone.length - 4}`}</span> : null}
                 </button>
+                <TalkButton
+                    open={talk}
+                    onClick={() => setTalk(!talk)}
+                />
                 <button
                     className={styles.invite}
                     onClick={() => setInvite(true)}
@@ -496,6 +502,7 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     return (
         <div className={classNames(sj.tokens, styles.controls)}>
             {controls}
+            {talk && live ? <JamTalk onClose={() => setTalk(false)} /> : null}
             {invite && live ? (
                 <InviteDialog
                     code={jam.code}
@@ -685,3 +692,85 @@ const JamOverlay = connect(state => ({
 }))(JamOverlayComponent);
 
 export {JamControls, JamOverlay};
+
+const TAB_NAMES = {code: 'Code', costumes: 'Costumes', sounds: 'Sounds'};
+
+/**
+ * Who's working where: on each sprite tile (and the Stage) in the sprite list, a ring in the first
+ * person's colour and their faces, up to three then "+N". Hovering the faces says who and which tab.
+ * @returns {?React.ReactElement} The overlay.
+ */
+const JamSpriteFacesComponent = () => {
+    const jam = useJam();
+    const [, setFrame] = useState(0);
+    const live = jam.status === 'live' || jam.status === 'reconnecting';
+    const busy = live && jam.others.some(o => o.target);
+
+    // Follow the tiles as the sprite list scrolls and changes.
+    useEffect(() => {
+        if (!busy) return;
+        const timer = setInterval(() => setFrame(f => (f + 1) % 1000000), 250);
+        return () => clearInterval(timer);
+    }, [busy]);
+
+    if (!busy) return null;
+    const byTarget = new Map();
+    jam.others.forEach(person => {
+        if (!person.target) return;
+        if (!byTarget.has(person.target)) byTarget.set(person.target, []);
+        byTarget.get(person.target).push(person);
+    });
+    const tiles = [];
+    document.querySelectorAll('[class*="sprite-selector-item_sprite-selector-item_"]').forEach(tile => {
+        const name = tile.querySelector('[class*="sprite-selector-item_sprite-name"]');
+        if (name) tiles.push([name.textContent, tile]);
+    });
+    const stage = document.querySelector('[class*="stage-selector_stage-selector_"]');
+    if (stage) tiles.push(['__stage__', stage]);
+
+    return (
+        <div className={sj.tokens}>
+            {tiles.map(([target, tile]) => {
+                const people = byTarget.get(target);
+                if (!people) return null;
+                const box = tile.getBoundingClientRect();
+                if (!box.width) return null;
+                const shown = people.slice(0, 3);
+                const label = people.map(p => `${p.name} · ${TAB_NAMES[p.tab] || 'Code'}`).join('\n');
+                return (
+                    <React.Fragment key={target}>
+                        <div
+                            className={styles.tileRing}
+                            style={{
+                                left: box.left - 3,
+                                top: box.top - 3,
+                                width: box.width + 6,
+                                height: box.height + 6,
+                                borderColor: people[0].color
+                            }}
+                            aria-hidden="true"
+                        />
+                        <div
+                            className={styles.faces}
+                            style={{left: box.left + 4, top: box.top - 12}}
+                            title={label}
+                            aria-label={`Here: ${people.map(p => p.name).join(', ')}`}
+                        >
+                            {shown.map(p => (
+                                <Avatar
+                                    key={p.connectionId}
+                                    name={p.name}
+                                    color={p.color}
+                                    small
+                                />
+                            ))}
+                            {people.length > 3 ? <span className={styles.more}>{`+${people.length - 3}`}</span> : null}
+                        </div>
+                    </React.Fragment>
+                );
+            })}
+        </div>
+    );
+};
+
+export {JamSpriteFacesComponent as JamSpriteFaces};

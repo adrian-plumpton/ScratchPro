@@ -37,7 +37,8 @@ const fakeLiveblocks = name => {
         createClient: () => ({
             enterRoom (roomId, {initialPresence}) {
                 const channel = new BroadcastChannel(`jam-test-${roomId}`);
-                const me = {connectionId: Date.now(), id: `user-${name}`, info: {name, color: '#36f9c6'}};
+                // A started the jam, so A is the host (Liveblocks gets this from jam-auth.mjs).
+                const me = {connectionId: Date.now(), id: `user-${name}`, info: {name, color: '#36f9c6', host: name === 'A'}};
                 let presence = {...initialPresence};
                 const others = new Map();
                 const subs = {others: new Set(), event: new Set(), status: new Set()};
@@ -83,8 +84,12 @@ const fakeLiveblocks = name => {
 
 const JAM = {code: '1234', roomId: 'jam-1234-test', title: 'Test jam', hostName: 'A', isHost: true};
 
-const browser = await chromium.launch(process.env.CHROMIUM_PATH ? {executablePath: process.env.CHROMIUM_PATH} : {});
-const context = await browser.newContext({viewport: {width: 1300, height: 850}});
+const browser = await chromium.launch({
+    ...(process.env.CHROMIUM_PATH ? {executablePath: process.env.CHROMIUM_PATH} : {}),
+    // Fake camera and microphone, so calls can be tested.
+    args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--autoplay-policy=no-user-gesture-required']
+});
+const context = await browser.newContext({viewport: {width: 1300, height: 850}, permissions: ['microphone', 'camera']});
 const errors = [];
 const open = async (name, url) => {
     const page = await context.newPage();
@@ -232,6 +237,58 @@ await b.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Slim
     .catch(() => {});
 check(await b.evaluate(() => vm.runtime.targets.some(t => t.getName() === 'Slime')),
     'Bigger changes (renaming a sprite) reach the other editor');
+
+// Who's working where: A sees B's face on the sprite B is on.
+await b.evaluate(() => vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Spark').id));
+await a.bringToFront();
+await a.waitForTimeout(1200);
+check(await a.locator('[aria-label="Here: B"]').count() === 1, 'A sees which sprite B is working on');
+
+// Chat: messages arrive; contact details are blocked; rude words are starred.
+const say = async (page, text) => {
+    await page.getByPlaceholder('Say something…').fill(text);
+    await page.getByPlaceholder('Say something…').press('Enter');
+};
+for (const page of [a, b]) {
+    await page.bringToFront();
+    await page.getByRole('button', {name: /^Chat and call/}).click();
+}
+await say(a, 'make the jump higher');
+await say(a, 'add me on snap');
+check(await a.getByText('Usernames for other apps can\'t be sent').isVisible(), 'and the sender is told why');
+await say(a, 'this is shit');
+await b.waitForTimeout(1000);
+const bChat = await b.evaluate(() => window.__sjJam.getJamState().chat.map(m => m.text));
+check(bChat.includes('make the jump higher'), 'Chat messages reach the other maker');
+check(!bChat.some(t => t.includes('snap')), 'Contact details are blocked');
+check(bChat.includes('this is ****'), 'Rude words are starred out');
+
+// Call: both join; A turns the mic and camera on; B gets live audio and video.
+for (const page of [a, b]) {
+    await page.bringToFront();
+    await page.getByRole('button', {name: '🎧 JOIN THE CALL'}).click();
+}
+await a.getByRole('button', {name: '🎙 MIC OFF'}).click();
+await a.getByRole('button', {name: '📷 CAM OFF'}).click();
+await b.bringToFront();
+await b.waitForFunction(() => [...document.querySelectorAll('video')].some(v => v.videoWidth > 0), null,
+    {timeout: 40000}).catch(() => {});
+check(await b.evaluate(() => [...document.querySelectorAll('video')].some(v => v.videoWidth > 0)),
+    'B sees A on camera');
+check(await b.evaluate(() => [...document.querySelectorAll('audio')]
+    .some(el => el.srcObject && el.srcObject.getAudioTracks().some(t => t.readyState === 'live'))),
+'B gets A\'s microphone');
+
+// The host turns B's mic off.
+await b.getByRole('button', {name: '🎙 MIC OFF'}).click();
+await a.bringToFront();
+await a.waitForTimeout(1500);
+const tile = a.locator('[class*="jam-talk_tile_"]', {hasText: 'B'}).last();
+await tile.hover();
+await tile.getByRole('button', {name: 'MUTE'}).click();
+await b.waitForTimeout(1000);
+check(await b.getByText('turned your mic off').isVisible(), 'The host can turn someone\'s mic off');
+check(await b.getByRole('button', {name: '🎙 MIC OFF'}).isVisible(), 'and it really goes off');
 
 // A ends the jam with the END button; B is told and keeps their copy.
 await a.bringToFront();

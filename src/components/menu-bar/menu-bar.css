@@ -317,3 +317,16 @@
 .title-field-growable {
     min-width: 110px;
 }
+
+.sj-soon-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sj-soon-tag {
+    padding: 3px 5px;
+    background: #ff2e88;
+    color: #fff;
+    font: 400 7px "Press Start 2P", monospace;
+}

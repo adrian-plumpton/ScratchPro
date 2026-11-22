@@ -14,6 +14,7 @@
 
 import {createClient} from '@liveblocks/client';
 import {loadJamSnapshot, saveJamSnapshot} from './sj-jam-api';
+import {filterChat} from './sj-chat-filter';
 import log from './log';
 
 const BLOCK_EVENTS = ['create', 'delete', 'move', 'change', 'var_create', 'var_rename', 'var_delete'];
@@ -26,7 +27,20 @@ const GAME_SYNC_DELAY = 1000;
 const DRAG_EVERY = 60;
 const GHOST_TIMEOUT = 3000;
 
-let state = {status: 'idle', code: null, jam: null, others: [], self: null, error: null, activity: []};
+const MAX_CHAT = 100;
+const EMPTY = {
+    status: 'idle',
+    code: null,
+    jam: null,
+    others: [],
+    self: null,
+    error: null,
+    activity: [],
+    chat: [],
+    unread: 0,
+    muted: []
+};
+let state = {...EMPTY};
 const listeners = new Set();
 const setState = next => {
     state = {...state, ...next};
@@ -36,6 +50,13 @@ const getJamState = () => state;
 const onJamState = listener => {
     listeners.add(listener);
     return () => listeners.delete(listener);
+};
+
+// Voice and video (sj-call.js) listen for their signalling messages here.
+const callListeners = new Set();
+const onCallEvent = listener => {
+    callListeners.add(listener);
+    return () => callListeners.delete(listener);
 };
 
 let session = null;
@@ -220,7 +241,10 @@ class JamSession {
             host: !!(o.info && o.info.host),
             target: o.presence && o.presence.target,
             tab: o.presence && o.presence.tab,
-            cursor: o.presence && o.presence.cursor
+            cursor: o.presence && o.presence.cursor,
+            inCall: !!(o.presence && o.presence.inCall),
+            micOn: !!(o.presence && o.presence.micOn),
+            camOn: !!(o.presence && o.presence.camOn)
         }));
         list.forEach(o => {
             const was = before.get(o.connectionId);
@@ -393,6 +417,14 @@ class JamSession {
                 this.stop();
                 setState({status: 'ended', error: 'You were removed from the jam.'});
             }
+            return;
+        }
+        if (event.type === 'chat') {
+            this.receiveChat(event, user, connectionId);
+            return;
+        }
+        if (event.type === 'rtc' || event.type === 'call-control') {
+            callListeners.forEach(listener => listener(event, user, connectionId));
             return;
         }
         if (!this.loaded) {
@@ -588,6 +620,40 @@ class JamSession {
         this.ghosts.delete(key);
     }
 
+    // Chat. Messages are checked before sending and again on arrival.
+    sendChat (text) {
+        const checked = filterChat(text);
+        if (!checked.ok) return checked;
+        const self = state.self || {};
+        const message = {type: 'chat',
+            id: `${Date.now()}-${Math.random().toString(36)
+                .slice(2, 8)}`,
+            text: checked.text};
+        this.room.broadcastEvent(message);
+        this.addChat({id: message.id, text: checked.text, name: self.name, color: self.color, mine: true});
+        return checked;
+    }
+
+    receiveChat (event, user, connectionId) {
+        const userId = user && user.id;
+        if (userId && state.muted.includes(userId)) return;
+        const checked = filterChat(event.text);
+        if (!checked.ok) return;
+        this.addChat({
+            id: String(event.id),
+            text: checked.text,
+            name: (user && user.info && user.info.name) || 'Someone',
+            color: user && user.info && user.info.color,
+            userId,
+            connectionId
+        });
+    }
+
+    addChat (message) {
+        const chat = [...state.chat, {...message, at: Date.now()}].slice(-MAX_CHAT);
+        setState({chat, unread: message.mine ? state.unread : state.unread + 1});
+    }
+
     // Presence: where I am. tab is set by setJamTab; cursor by setJamCursor.
     updatePresence (extra) {
         if (!this.room) return;
@@ -633,7 +699,7 @@ const joinJam = (vm, jam, options) => {
 const leaveJam = () => {
     if (session) session.stop();
     session = null;
-    setState({status: 'idle', code: null, jam: null, others: [], self: null, error: null, activity: []});
+    setState({...EMPTY});
 };
 
 const broadcastJam = event => session && session.broadcast(event);
@@ -642,9 +708,23 @@ if (typeof window !== 'undefined' && typeof location !== 'undefined' && location
     window.__sjJam = {joinJam, getJamState, saveForJam};
 }
 const setJamTab = tab => session && session.updatePresence({tab});
+const updateJamPresence = patch => session && session.updatePresence(patch);
+const sendJamChat = text => (session ? session.sendChat(text) : {ok: false, reason: 'You\'re not in a jam.'});
+const markChatRead = () => setState({unread: 0});
+const muteInChat = userId => setState({
+    muted: state.muted.includes(userId) ? state.muted.filter(id => id !== userId) : [...state.muted, userId],
+    chat: state.chat.filter(m => m.userId !== userId || state.muted.includes(userId))
+});
+const getJamRoom = () => (session ? session.room : null);
 const setJamCursor = cursor => session && session.updatePresence({cursor});
 
 export {
+    sendJamChat,
+    markChatRead,
+    muteInChat,
+    onCallEvent,
+    getJamRoom,
+    updateJamPresence,
     saveForJam,
     joinJam,
     leaveJam,

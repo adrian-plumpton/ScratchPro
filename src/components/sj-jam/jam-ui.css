@@ -439,3 +439,27 @@
     border-color: #ff6fa8;
     color: #ff6fa8;
 }
+
+/* Who's working where, on the sprite list. */
+.tile-ring {
+    position: fixed;
+    z-index: 40;
+    border: 3px solid;
+    border-radius: 0.6rem;
+    pointer-events: none;
+}
+
+.faces {
+    position: fixed;
+    z-index: 41;
+    display: flex;
+    padding-left: 6px;
+}
+
+.faces > * {
+    width: 22px;
+    height: 22px;
+    margin-left: -6px;
+    border: 2px solid var(--night);
+    font-size: 8px;
+}

@@ -281,8 +281,9 @@ class MenuBar extends React.Component {
         this.props.onRequestCloseFile();
     }
     handleClickPackager () {
-        this.props.onClickPackager();
+        // Sparkjam: making apps from games is coming; TurboWarp's packager isn't made for kids.
         this.props.onRequestCloseFile();
+        this.setState({soon: 'package'});
     }
     handleClickDesktopSettings () {
         this.props.onClickDesktopSettings();
@@ -717,12 +718,10 @@ class MenuBar extends React.Component {
                                             <MenuItem
                                                 onClick={this.handleClickPackager}
                                             >
-                                                <FormattedMessage
-                                                    defaultMessage="Package project"
-                                                    // eslint-disable-next-line max-len
-                                                    description="Menu bar item to open the current project in the packager"
-                                                    id="tw.menuBar.package"
-                                                />
+                                                <span className={styles.sjSoonItem}>
+                                                    {'Make an app'}
+                                                    <span className={styles.sjSoonTag}>{'SOON'}</span>
+                                                </span>
                                             </MenuItem>
                                         </MenuSection>
                                     )}
