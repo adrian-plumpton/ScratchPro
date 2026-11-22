@@ -3,22 +3,9 @@
 
 import {Liveblocks} from '@liveblocks/node';
 import {getStore} from '@netlify/blobs';
-import {getUser} from '@netlify/identity';
+import {currentUser, isReady} from '../lib/account.mjs';
 
 const COLORS = ['#ff2e88', '#36f9c6', '#ffe14d', '#c9a7ff', '#ffb347', '#7fe8f5', '#9be870', '#ff9466'];
-
-const ageFrom = (month, year, today = new Date()) => {
-    let age = today.getFullYear() - year;
-    if (today.getMonth() + 1 < month) age -= 1;
-    return age;
-};
-
-const isReady = user => {
-    const data = user.userMetadata || {};
-    const year = Number(data.birth_year);
-    if (!data.maker_name || !year) return false;
-    return ageFrom(Number(data.birth_month) || 1, year) >= 13 || !!data.consent;
-};
 
 const colorFor = id => {
     let hash = 0;
@@ -30,7 +17,7 @@ export default async req => {
     if (req.method !== 'POST') return new Response('Not found', {status: 404});
     const secret = process.env.LIVEBLOCKS_SECRET_KEY;
     if (!secret) return Response.json({error: 'Jams aren\'t set up on this site yet.'}, {status: 503});
-    const user = await getUser();
+    const user = await currentUser(req);
     if (!user || !isReady(user)) return Response.json({error: 'Sign in to jam.'}, {status: 401});
 
     const {room} = await req.json().catch(() => ({}));

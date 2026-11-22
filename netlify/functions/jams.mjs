@@ -11,26 +11,13 @@
 
 import crypto from 'node:crypto';
 import {getStore} from '@netlify/blobs';
-import {getUser} from '@netlify/identity';
+import {currentUser, isReady} from '../lib/account.mjs';
 
 const MAX_GAME_BYTES = 5 * 1024 * 1024;
 const MAX_LOOKUPS_PER_HOUR = 30;
 const CODE = /^\d{4}$/;
 
 const json = (body, status = 200) => Response.json(body, {status, headers: {'Cache-Control': 'no-store'}});
-
-const ageFrom = (month, year, today = new Date()) => {
-    let age = today.getFullYear() - year;
-    if (today.getMonth() + 1 < month) age -= 1;
-    return age;
-};
-
-const isReady = user => {
-    const data = user.userMetadata || {};
-    const year = Number(data.birth_year);
-    if (!data.maker_name || !year) return false;
-    return ageFrom(Number(data.birth_month) || 1, year) >= 13 || !!data.consent;
-};
 
 const jamKey = code => `jams/${code}`;
 const snapshotKey = code => `snapshots/${code}`;
@@ -69,7 +56,7 @@ const publicJam = (jam, userId) => ({
 });
 
 export default async req => {
-    const user = await getUser();
+    const user = await currentUser(req);
     if (!user) return json({error: 'Sign in to jam.', reason: 'signin'}, 401);
     if (!isReady(user)) return json({error: 'Finish setting up your account to jam.', reason: 'signin'}, 403);
     const makerName = String(user.userMetadata.maker_name);

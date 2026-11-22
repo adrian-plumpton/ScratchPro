@@ -13,7 +13,8 @@ import {
     oauthLogin,
     updateUser,
     acceptInvite,
-    requestPasswordRecovery
+    requestPasswordRecovery,
+    refreshSession
 } from '@netlify/identity';
 
 const listeners = new Set();
@@ -145,7 +146,16 @@ const signOut = async () => {
  * @param {object} data Fields to set, eg. {maker_name: 'PixelFox42'}.
  * @returns {Promise<object>} The updated account.
  */
-const updateProfile = async data => setCurrent(await updateUser({data}));
+const updateProfile = async data => {
+    const user = await updateUser({data});
+    // Refresh the sign-in token too, so the server sees the new details straight away.
+    try {
+        await refreshSession();
+    } catch (e) {
+        // The server also looks the account up when the token's copy is out of date.
+    }
+    return setCurrent(user);
+};
 
 export {
     startAuth,
