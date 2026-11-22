@@ -16,10 +16,22 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
   remembered on that device.
 - Add `?touch=1` to a URL to try the touch experience on a computer (`?touch=0` turns it off).
 
+## Sparkjam pages
+
+| Page | What it is |
+|---|---|
+| `/` (`index.html`) | Landing page. No game engine, so it loads fast. Old `/#123` links forward to `/game#123`. |
+| `/games` (`games.html`) | Games gallery: the samples, filters, search, and a box to play a Scratch link. |
+| `/game?sample=<id>` or `/game#<project id>` (`game.html`) | The player, with how-to-play, Play full screen, Remix and Jam. Pressing Play on a sample starts it straight away. |
+| `editor.html?sample=<id>` | Remix: the editor opened on a sample. `editor.html?blank` opens an empty project. |
+
+Shared pieces (nav, footer, game cards, Lumi, the "coming soon" dialog) are in `src/components/sj/`.
+Jams and accounts are not built yet; their buttons show a "coming soon" message. Clean URLs come from
+`netlify.toml` in production, the dev server's rewrites locally, and `scripts/serve-build.js` in CI.
+
 ## Sample games
 
-The home page has four sample games. **Play** starts one on the stage; **Remix** opens it in the editor.
-The first time the editor loads, it opens **Spark Hop**. **File > New** still starts a blank project.
+**Play** opens a sample on the game page; **Remix** opens it in the editor.
 
 | Game | What it shows |
 |---|---|

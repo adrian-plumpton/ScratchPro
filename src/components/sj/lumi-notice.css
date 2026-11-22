@@ -1,0 +1,69 @@
+.wrapper {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    display: flex;
+    overflow: auto;
+    background: var(--scan), var(--night);
+}
+
+.full-screen {
+    position: fixed;
+    inset: 0;
+    width: auto;
+    height: auto;
+    z-index: 1000;
+}
+
+.inner {
+    margin: auto;
+    width: 100%;
+    max-width: 460px;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 26px;
+    text-align: left;
+}
+
+.box {
+    width: 100%;
+}
+
+.small {
+    margin-top: 12px;
+    font: 15px/1.45 var(--body);
+    color: var(--muted);
+}
+
+.small p {
+    margin: 0 0 8px !important;
+    color: inherit !important;
+}
+
+.small a {
+    color: var(--cyan) !important;
+    text-decoration: underline !important;
+    overflow-wrap: anywhere;
+}
+
+.small pre {
+    white-space: pre-wrap;
+    font-size: 12px;
+    color: #7e68a6;
+    margin: 8px 0 0;
+    max-height: 120px;
+    overflow: auto;
+}
+
+.actions {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+}
+
+.actions > * {
+    width: 100%;
+}

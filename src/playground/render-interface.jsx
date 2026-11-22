@@ -29,7 +29,6 @@ import TWPackagerIntegrationHOC from '../lib/tw-packager-integration-hoc.jsx';
 import SettingsStore from '../addons/settings-store-singleton';
 import '../lib/tw-fix-history-api';
 import GUI from './render-gui.jsx';
-import Description from '../components/tw-description/description.jsx';
 import BrowserModal from '../components/browser-modal/browser-modal.jsx';
 import CloudVariableBadge from '../containers/tw-cloud-variable-badge.jsx';
 import TWWindchimeSubmitter from '../containers/tw-windchime-submitter.jsx';
@@ -41,7 +40,10 @@ import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
 import {APP_NAME} from '../lib/brand.js';
 import SPTouchControls from '../containers/sp-touch-controls.jsx';
 import SPMobileEditor from '../containers/sp-mobile-editor.jsx';
-import {HomeHeader, HomeHero, HomeSections, HomeFooter} from '../components/sp-home/home.jsx';
+import {SiteNav, SiteFooter, SoonDialog, styles as sj} from '../components/sj/site.jsx';
+import {GameSide, Crumb, MoreGames} from '../components/sj-game/game-page.jsx';
+import gameStyles from '../components/sj-game/game-page.css';
+import {requestedSample} from '../lib/sample-project';
 
 import styles from './interface.css';
 
@@ -80,11 +82,29 @@ class Interface extends React.Component {
     constructor (props) {
         super(props);
         this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
+        this.handleSoon = this.handleSoon.bind(this);
+        this.handleProjectLoaded = this.handleProjectLoaded.bind(this);
+        this.autoStarted = false;
+        this.handleCloseSoon = this.handleCloseSoon.bind(this);
+        this.state = {soon: null};
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
             loadServiceWorker();
         }
+    }
+    handleProjectLoaded () {
+        // Sparkjam: pressing Play on a sample (/game?sample=id) starts it straight away, once.
+        if (this.autoStarted || !this.props.isPlayerOnly || !requestedSample() || this.props.projectId !== '0') return;
+        this.autoStarted = true;
+        this.props.vm.start();
+        this.props.vm.greenFlag();
+    }
+    handleSoon (soon) {
+        this.setState({soon});
+    }
+    handleCloseSoon () {
+        this.setState({soon: null});
     }
     handleUpdateProjectTitle (title, isDefault) {
         if (isDefault || !title) {
@@ -108,63 +128,59 @@ class Interface extends React.Component {
             isPlayerOnly,
             isRtl,
             projectId,
+            vm,
             /* eslint-enable no-unused-vars */
             ...props
         } = this.props;
         const isHomepage = isPlayerOnly && !isFullScreen;
         const isEditor = !isPlayerOnly;
+        // Sparkjam: on the game page (/game) the player sits inside the site's nav and side panel, and
+        // the stage sizes itself to its column (see screen-utils). The element tree is the same in
+        // every mode so the GUI is never remounted when switching to full screen or the editor.
         return (
             <div
                 className={classNames(styles.container, {
                     [styles.playerOnly]: isHomepage,
+                    [sj.page]: isHomepage,
+                    [styles.sjFullscreen]: isPlayerOnly && isFullScreen,
                     [styles.editor]: isEditor
                 })}
                 dir={isRtl ? 'rtl' : 'ltr'}
             >
                 <TWWindchimeSubmitter />
-                {/* ScratchPro: a simple header and hero instead of the full menu bar */}
-                {isHomepage ? <HomeHeader /> : null}
-                {isHomepage ? <HomeHero /> : null}
-                <div
-                    className={styles.center}
-                    style={isPlayerOnly ? ({
-                        // + 2 accounts for 1px border on each side of the stage
-                        width: `${Math.max(480, props.customStageSize.width) + 2}px`
-                    }) : null}
-                >
-                    <GUI
-                        onClickAddonSettings={handleClickAddonSettings}
-                        onUpdateProjectTitle={this.handleUpdateProjectTitle}
-                        backpackVisible
-                        backpackHost="_local_"
-                        {...props}
-                    />
-                    <SPTouchControls />
-                    <SPMobileEditor />
-                    {isHomepage ? (
-                        <React.Fragment>
-                            {isBrowserSupported() ? null : (
-                                <BrowserModal isRtl={isRtl} />
-                            )}
-                            {hasCloudVariables && projectId !== '0' && (
-                                <div className={styles.section}>
-                                    <CloudVariableBadge />
-                                </div>
-                            )}
-                            {description.instructions || description.credits ? (
-                                <div className={styles.section}>
-                                    <Description
-                                        instructions={description.instructions}
-                                        credits={description.credits}
-                                        projectId={projectId}
-                                    />
-                                </div>
-                            ) : null}
-                        </React.Fragment>
-                    ) : null}
+                {isHomepage ? <SiteNav onSoon={this.handleSoon} /> : null}
+                <div className={isHomepage ? gameStyles.main : styles.center}>
+                    {isHomepage ? <Crumb /> : null}
+                    <div className={isHomepage ? gameStyles.stageCol : styles.center}>
+                        <GUI
+                            onClickAddonSettings={handleClickAddonSettings}
+                            onUpdateProjectTitle={this.handleUpdateProjectTitle}
+                            onProjectLoaded={this.handleProjectLoaded}
+                            backpackVisible
+                            backpackHost="_local_"
+                            {...props}
+                        />
+                        <SPTouchControls />
+                        <SPMobileEditor />
+                        {isHomepage && !isBrowserSupported() ? (
+                            <BrowserModal isRtl={isRtl} />
+                        ) : null}
+                        {isHomepage && hasCloudVariables && projectId !== '0' ? (
+                            <div className={styles.section}>
+                                <CloudVariableBadge />
+                            </div>
+                        ) : null}
+                    </div>
+                    {isHomepage ? <GameSide onSoon={this.handleSoon} /> : null}
                 </div>
-                {isHomepage ? <HomeSections /> : null}
-                {isHomepage ? <HomeFooter /> : null}
+                {isHomepage ? <MoreGames /> : null}
+                {isHomepage ? <SiteFooter onSoon={this.handleSoon} /> : null}
+                {this.state.soon ? (
+                    <SoonDialog
+                        what={this.state.soon}
+                        onClose={this.handleCloseSoon}
+                    />
+                ) : null}
             </div>
         );
     }
@@ -185,7 +201,11 @@ Interface.propTypes = {
     isLoading: PropTypes.bool,
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
-    projectId: PropTypes.string
+    projectId: PropTypes.string,
+    vm: PropTypes.shape({
+        start: PropTypes.func,
+        greenFlag: PropTypes.func
+    })
 };
 
 const mapStateToProps = state => ({
@@ -196,7 +216,8 @@ const mapStateToProps = state => ({
     isLoading: getIsLoading(state.scratchGui.projectState.loadingState),
     isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
     isRtl: state.locales.isRtl,
-    projectId: state.scratchGui.projectState.projectId
+    projectId: state.scratchGui.projectState.projectId,
+    vm: state.scratchGui.vm
 });
 
 const mapDispatchToProps = () => ({});

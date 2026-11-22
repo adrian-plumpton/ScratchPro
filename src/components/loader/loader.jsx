@@ -6,9 +6,8 @@ import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import styles from './loader.css';
 import {getIsLoadingWithId} from '../../reducers/project-state';
-import topBlock from './top-block.svg';
-import middleBlock from './middle-block.svg';
-import bottomBlock from './bottom-block.svg';
+import {Lumi} from '../sj/pixel-art.jsx';
+import {loadingTip} from '../../lib/sample-games';
 
 const mainMessages = {
     'gui.loader.headline': (
@@ -60,6 +59,7 @@ class LoaderComponent extends React.Component {
         this.barInnerEl = null;
         this.messageEl = null;
         this.ignoreProgress = false;
+        this.tip = loadingTip();
     }
     componentDidMount () {
         this.handleAssetProgress(
@@ -113,21 +113,12 @@ class LoaderComponent extends React.Component {
                 })}
             >
                 <div className={styles.container}>
-                    <div className={styles.blockAnimation}>
-                        <img
-                            className={styles.topBlock}
-                            src={topBlock}
-                            draggable={false}
-                        />
-                        <img
-                            className={styles.middleBlock}
-                            src={middleBlock}
-                            draggable={false}
-                        />
-                        <img
-                            className={styles.bottomBlock}
-                            src={bottomBlock}
-                            draggable={false}
+                    {/* Sparkjam: Lumi plays while the game loads. */}
+                    <div className={styles.lumi}>
+                        <Lumi
+                            arms="phone"
+                            phone
+                            px={7}
                         />
                     </div>
 
@@ -146,6 +137,7 @@ class LoaderComponent extends React.Component {
                             ref={this.barInnerRef}
                         />
                     </div>
+                    <p className={styles.tip}>{`TIP: ${this.tip}`}</p>
                 </div>
             </div>
         );

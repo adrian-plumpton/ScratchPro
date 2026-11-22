@@ -33,6 +33,24 @@ const PLAYER_GUTTER = 16;
 const getPlayerMaxStageWidth = () => Math.max(160, window.innerWidth - PLAYER_GUTTER - 2);
 
 /**
+ * True on the Sparkjam game page (/game), where the stage fills a column of the page layout.
+ * @returns {boolean} Whether this is the game page.
+ */
+const isGamePage = () => typeof location !== 'undefined' && /\/game(\.html)?$/.test(location.pathname);
+
+/**
+ * Width of the stage on the game page, to fill its column (see sj-game/game-page.css): beside the
+ * 400px side panel on wide screens, the page width less its margins on tablets, and edge to edge on phones.
+ * @returns {number} Stage width in CSS px, excluding the 1px border on each side.
+ */
+const getGamePageStageWidth = () => {
+    const w = window.innerWidth;
+    if (w > 1000) return Math.max(360, Math.min(960, w - 112 - 36 - 400 - 2));
+    if (w > 600) return Math.min(960, w - 112 - 2);
+    return w - 2;
+};
+
+/**
  * Phones get the compact editor (one pane at a time). Decided from the screen, not the window,
  * because tablets change the viewport width to fit the full editor.
  * @returns {boolean} True on phone-sized touch screens.
@@ -181,5 +199,7 @@ export {
     setImmersive,
     injectMobileStyles,
     getPlayerMaxStageWidth,
+    isGamePage,
+    getGamePageStageWidth,
     PLAYER_GUTTER
 };

@@ -1,0 +1,204 @@
+/* Sparkjam game page (design P3). */
+
+.main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 20px 36px;
+    padding: 30px 56px 60px;
+    background: var(--scan), radial-gradient(900px 500px at 30% 0%, #2a0a44, var(--night) 70%);
+}
+
+.crumb {
+    grid-column: 1 / -1;
+    font-size: 15px;
+    color: var(--muted);
+}
+
+.crumb a:hover {
+    color: #fff;
+}
+
+.crumb b {
+    color: #fff;
+    font-weight: 500;
+}
+
+.stage-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    min-width: 0;
+}
+
+.title {
+    font: 400 26px/1.4 var(--px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--pink);
+    overflow-wrap: anywhere;
+}
+
+.by {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.by a {
+    color: var(--cyan) !important;
+}
+
+.desc {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #d8ccef;
+}
+
+.how {
+    border: 3px solid var(--edge);
+    background: var(--card);
+    padding: 18px;
+}
+
+.how-title {
+    font: 400 10px var(--px);
+    color: var(--cyan);
+    margin: 0 0 14px;
+}
+
+.how-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-top: 2px solid #2a1442;
+    font-size: 16px;
+}
+
+.how-title + .how-row {
+    border-top: 0;
+}
+
+.how-chip {
+    font: 400 8px var(--px);
+    padding: 7px 8px;
+    color: var(--night);
+    justify-self: start;
+}
+
+.keys {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.scratch-desc {
+    border: 3px solid var(--edge);
+    background: var(--card);
+    padding: 18px;
+    color: #d8ccef;
+    max-height: 340px;
+    overflow: auto;
+}
+
+.scratch-desc a {
+    color: var(--cyan) !important;
+}
+
+.acts {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.note {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: -4px !important;
+}
+
+.below {
+    background: var(--night);
+    padding: 0 56px 70px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 400px;
+    gap: 36px;
+}
+
+.more-title {
+    font: 400 14px var(--px);
+    color: #fff;
+    margin: 0 0 20px;
+}
+
+.more-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.scratch {
+    border: 3px dashed var(--edge);
+    padding: 22px;
+    align-self: start;
+}
+
+.scratch h2 {
+    font: 700 20px var(--body);
+    margin: 0 0 8px;
+}
+
+.scratch p {
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.45;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 1000px) {
+    .main,
+    .below {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .main {
+        padding: 12px 0 30px;
+    }
+
+    .crumb {
+        padding: 0 16px;
+        font-size: 14px;
+    }
+
+    .side {
+        padding: 0 16px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .below {
+        padding: 0 16px 40px;
+    }
+
+    .more-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .more-cards > :nth-child(3) {
+        display: none;
+    }
+}

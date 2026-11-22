@@ -107,3 +107,12 @@ a {
         width: 160px;
     }
 }
+
+/* Sparkjam: full screen play from the game page is dark, like the rest of the site. */
+.sj-fullscreen [class*="stage-wrapper_full-screen"],
+.sj-fullscreen [class*="stage-header_stage-header-wrapper-overlay"] {
+    background-color: #14001f;
+}
+.sj-fullscreen [class*="stage-header_stage-header-wrapper-overlay"] {
+    border-bottom: 2px solid #2c1745;
+}

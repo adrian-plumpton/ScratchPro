@@ -1,11 +1,12 @@
-import classNames from 'classnames';
+// Sparkjam: friendly screens for projects that can't be opened (design S7), in Lumi's voice.
+
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
-import Box from '../box/box.jsx';
-import {ProjectUnavailableLegalReasons, ProjectUnsharedError} from '../../lib/tw-load-project-error';
-
-import styles from './project-load-error.css';
+import classNames from 'classnames';
+import LumiNotice from '../sj/lumi-notice.jsx';
+import sj from '../sj/sj.css';
+import {links} from '../../lib/sj-links';
+import {ProjectUnavailableLegalReasons, ProjectUnsharedError, ProjectFetchError} from '../../lib/tw-load-project-error';
 
 const UNSHARED_DOCS = 'https://docs.turbowarp.org/unshared-projects';
 
@@ -18,107 +19,30 @@ const isSafeURL = url => {
     }
 };
 
-const Link = ({href, children}) => (
+const ExternalLink = ({href, children}) => (
     <a
-        className={styles.link}
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-    >
-        {children || href}
-    </a>
+    >{children}</a>
 );
-
-Link.propTypes = {
+ExternalLink.propTypes = {
     children: PropTypes.node,
     href: PropTypes.string.isRequired
 };
 
-const handleReload = () => {
-    window.location.reload();
-};
-
-const UnsharedMessage = () => (
+const actions = (
     <React.Fragment>
-        <p className={styles.header}>
-            <FormattedMessage
-                defaultMessage="This project is unshared."
-                description="Title of page shown when a project is unshared"
-                id="tw.unshared3.1"
-            />
-        </p>
-        <p>
-            <FormattedMessage
-                defaultMessage="Make sure you entered the right project ID or URL."
-                description="Appears on unshared projects. People often mistype the project number."
-                id="tw.unshared.wrongId"
-            />
-        </p>
-        <p>
-            <FormattedMessage
-                defaultMessage="If it was shared recently, it may take up to {minutes} minutes to load here."
-                description="Appears on unshared projects. {minutes} is replaced with a number such as 30."
-                id="tw.unshared3.cache"
-                values={{
-                    minutes: 30
-                }}
-            />
-        </p>
-        <p>
-            <FormattedMessage
-                defaultMessage="If this project is actually shared, please report a bug."
-                description="Appears on unshared projects"
-                id="tw.unshared.bug"
-            />
-        </p>
-        <p>
-            <Link href={UNSHARED_DOCS}>
-                <FormattedMessage
-                    defaultMessage="Learn more about unshared projects"
-                    description="Link to documentation about unshared projects"
-                    id="tw.unshared3.learnMore"
-                />
-            </Link>
-        </p>
-        <button
-            className={styles.button}
-            onClick={handleReload}
-        >
-            <FormattedMessage
-                defaultMessage="Reload"
-                description="Button to reload the page when page crashes"
-                id="gui.crashMessage.reload"
-            />
-        </button>
+        <a
+            className={sj.btn}
+            href={`${links.games}#scratch-link`}
+        >{'TRY ANOTHER LINK'}</a>
+        <a
+            className={classNames(sj.btn, sj.btnGhost)}
+            href={links.sample('spark-hop')}
+        >{'PLAY A SAMPLE'}</a>
     </React.Fragment>
 );
-
-const UnavailableLegalReasonsMessage = ({moreUrl}) => (
-    <React.Fragment>
-        <p className={styles.header}>
-            <FormattedMessage
-                defaultMessage="This project is unavailable due to a copyright claim."
-                description="Title of page shown when a project is unavailable due to a copyright claim"
-                id="tw.legalReason.title"
-            />
-        </p>
-        {moreUrl && isSafeURL(moreUrl) && (
-            <p>
-                <Link href={moreUrl}>
-                    <FormattedMessage
-                        defaultMessage="Read the notice"
-                        description="Link to the copyright notice that caused a project to be unavailable"
-                        id="tw.legalReason.notice"
-                    />
-                </Link>
-            </p>
-        )}
-    </React.Fragment>
-);
-
-UnavailableLegalReasonsMessage.propTypes = {
-    moreUrl: PropTypes.string
-};
 
 /**
  * @param {unknown} error The error that stopped the project from loading.
@@ -126,24 +50,38 @@ UnavailableLegalReasonsMessage.propTypes = {
  */
 const isKnownProjectLoadError = error => (
     error instanceof ProjectUnsharedError ||
-    error instanceof ProjectUnavailableLegalReasons
+    error instanceof ProjectUnavailableLegalReasons ||
+    error instanceof ProjectFetchError
 );
 
-const ProjectLoadError = ({error, isFullScreen}) => (
-    <div
-        className={classNames(styles.wrapper, {
-            [styles.fullScreen]: isFullScreen
-        })}
-    >
-        <Box className={styles.body}>
-            {error instanceof ProjectUnavailableLegalReasons ? (
-                <UnavailableLegalReasonsMessage moreUrl={error.moreUrl} />
-            ) : (
-                <UnsharedMessage />
-            )}
-        </Box>
-    </div>
-);
+const ProjectLoadError = ({error, isFullScreen}) => {
+    if (error instanceof ProjectUnavailableLegalReasons) {
+        return (
+            <LumiNotice
+                fullScreen={isFullScreen}
+                say="I can't open this one. It was taken down after a copyright claim."
+                actions={actions}
+            >
+                {error.moreUrl && isSafeURL(error.moreUrl) ? (
+                    <p><ExternalLink href={error.moreUrl}>{'Read the notice'}</ExternalLink></p>
+                ) : null}
+            </LumiNotice>
+        );
+    }
+    return (
+        <LumiNotice
+            fullScreen={isFullScreen}
+            say="I can't open this one. It might be private or deleted on Scratch."
+            actions={actions}
+        >
+            <p>{'Only shared Scratch projects can be played here. Check the link, or ask the maker to share it.'}</p>
+            <p>
+                {'Shared it in the last half hour? Give it a little longer. '}
+                <ExternalLink href={UNSHARED_DOCS}>{'Learn more'}</ExternalLink>
+            </p>
+        </LumiNotice>
+    );
+};
 
 ProjectLoadError.propTypes = {
     error: PropTypes.instanceOf(Error).isRequired,

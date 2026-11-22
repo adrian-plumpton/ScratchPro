@@ -4,7 +4,9 @@ import {
     STAGE_DISPLAY_SIZES,
     FIXED_WIDTH
 } from '../lib/layout-constants';
-import {isTouchDevice, isCompactEditor, getPlayerMaxStageWidth, getCompactMaxStageWidth} from './sp-mobile';
+import {
+    isTouchDevice, isCompactEditor, getPlayerMaxStageWidth, getCompactMaxStageWidth, isGamePage, getGamePageStageWidth
+} from './sp-mobile';
 
 const maxScaleParam = typeof URLSearchParams !== 'undefined' && new URLSearchParams(location.search).get('scale');
 
@@ -91,9 +93,16 @@ const getStageDimensions = (stageSize, customStageSize, isFullScreen, isPlayerOn
             stageDimensions.width = stageDimensions.scale * stageDimensions.widthDefault;
         }
 
+        // Sparkjam: on the game page the stage fills its column, larger or smaller than usual.
+        if (isPlayerOnly && isGamePage()) {
+            stageDimensions.width = getGamePageStageWidth();
+            stageDimensions.scale = stageDimensions.width / stageDimensions.widthDefault;
+            stageDimensions.height = stageDimensions.scale * stageDimensions.heightDefault;
+        }
+
         // ScratchPro: never let the player stage (or the phone editor's stage) be wider than the screen.
         let maxWidth = Infinity;
-        if (isPlayerOnly) maxWidth = getPlayerMaxStageWidth();
+        if (isPlayerOnly && !isGamePage()) maxWidth = getPlayerMaxStageWidth();
         else if (isCompactEditor()) maxWidth = getCompactMaxStageWidth(customStageSize);
         if (stageDimensions.width > maxWidth) {
             stageDimensions.width = maxWidth;

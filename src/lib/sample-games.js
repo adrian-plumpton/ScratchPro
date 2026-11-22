@@ -67,6 +67,24 @@ const SAMPLE_GAMES = [
     }
 ];
 
+const GENERAL_TIPS = [
+    'On phones, arrow keys become a joystick.',
+    'Press the green flag to start a game.',
+    'Remix any sample to see the blocks inside.',
+    'Other keys become buttons on phones.'
+];
+
+/**
+ * A tip for the loading screen: the sample game's own tip when one is loading, or a general one.
+ * @returns {string} The tip.
+ */
+const loadingTip = () => {
+    const id = typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('sample');
+    const game = SAMPLE_GAMES.find(g => g.id === id);
+    if (game) return game.tip;
+    return GENERAL_TIPS[Math.floor(Math.random() * GENERAL_TIPS.length)];
+};
+
 const getSampleGame = id => SAMPLE_GAMES.find(game => game.id === id) || null;
 
 const sampleFileUrl = (id, extension) => `${process.env.ROOT || '/'}samples/${id}.${extension}`;
@@ -74,5 +92,6 @@ const sampleFileUrl = (id, extension) => `${process.env.ROOT || '/'}samples/${id
 export {
     SAMPLE_GAMES,
     getSampleGame,
+    loadingTip,
     sampleFileUrl
 };

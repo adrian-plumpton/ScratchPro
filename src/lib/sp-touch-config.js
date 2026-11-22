@@ -3,7 +3,8 @@
 const ARROWS = {up: 'up arrow', down: 'down arrow', left: 'left arrow', right: 'right arrow'};
 const WASD = {up: 'w', down: 's', left: 'a', right: 'd'};
 
-const BUTTON_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#f59e0b', '#a855f7', '#14b8a6'];
+// Sparkjam palette: yellow, cyan, pink, lavender, orange, cream. Labels are dark on all of them.
+const BUTTON_COLORS = ['#ffe14d', '#36f9c6', '#ff2e88', '#c9a7ff', '#ffb347', '#f3efe6'];
 const MAX_BUTTONS = 6;
 
 const SPECIAL_KEYS = {

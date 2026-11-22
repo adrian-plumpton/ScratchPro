@@ -11,9 +11,13 @@
     <script>
       // Old links to a project on the home page (/#123456, /?project_url=...) now open the game page.
       (function () {
-        if (/^#\d+/.test(location.hash) || /[?&]project_url=/.test(location.search)) {
-          location.replace('<%= htmlWebpackPlugin.options.root %>game' + location.search + location.hash);
-        }
+        var forward = function () {
+          if (/^#\d+/.test(location.hash) || /[?&]project_url=/.test(location.search)) {
+            location.replace('<%= htmlWebpackPlugin.options.root %>game' + location.search + location.hash);
+          }
+        };
+        forward();
+        window.addEventListener('hashchange', forward);
       })();
     </script>
     <% } %>
