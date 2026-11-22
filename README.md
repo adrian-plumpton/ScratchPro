@@ -24,6 +24,12 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
 | `/games` (`games.html`) | Games gallery: the samples, filters, search, and a box to play a Scratch link. |
 | `/game?sample=<id>` or `/game#<project id>` (`game.html`) | The player, with how-to-play, Play full screen, Remix and Jam. Pressing Play on a sample starts it straight away. |
 | `editor.html?sample=<id>` | Remix: the editor opened on a sample. `editor.html?blank` opens an empty project. |
+| `editor.html?new` | Start making: asks which template to start from (four samples or blank). |
+| `/my-games` (`my-games.html`) | Games saved in this browser. The editor saves a couple of seconds after each change; `editor.html?game=<id>` reopens one. |
+
+The editor uses the Sparkjam theme by default (`src/lib/themes/*/sparkjam.js`); TurboWarp's light and dark
+looks and Scratch's block colours are still in Settings. Full-screen play on phones has exit and pause
+buttons, with a pause menu.
 
 Shared pieces (nav, footer, game cards, Lumi, the "coming soon" dialog) are in `src/components/sj/`.
 Jams and accounts are not built yet; their buttons show a "coming soon" message. Clean URLs come from

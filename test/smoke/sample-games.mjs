@@ -146,6 +146,48 @@ await page.waitForSelector('.blocklyWorkspace', {timeout: 60000});
 await page.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Hero'), null, {timeout: 30000});
 check(true, 'Remix opens Gem Maze in the editor');
 
+// Full-screen play on a phone: pause freezes the clock, resume carries on.
+await page.goto(`${BASE_URL}/game?sample=spark-hop`);
+await page.waitForFunction(() => window.vm && vm.runtime.targets.length > 1, null, {timeout: 60000});
+await page.waitForTimeout(1200);
+await page.getByRole('button', {name: 'Play full screen'}).first().click();
+await page.waitForTimeout(1000);
+await page.getByRole('button', {name: 'Pause'}).click();
+const pausedTime = await stageVar('Time');
+await page.waitForTimeout(2200);
+check(await stageVar('Time') === pausedTime, 'Pause freezes the game');
+await page.getByRole('button', {name: '▶ RESUME'}).click();
+await page.waitForTimeout(2200);
+check(await stageVar('Time') < pausedTime, 'Resume carries on');
+check(await page.locator('[class*="pause-screen"]').count() === 0, 'Resume closes the pause menu');
+
+// The editor on a computer: the new game picker, saving to My games, and reopening.
+const desk = await browser.newPage({viewport: {width: 1440, height: 900}});
+desk.on('pageerror', err => pageErrors.push(err.message));
+await desk.goto(`${BASE_URL}/editor.html?new`);
+await desk.getByText('START A NEW GAME').waitFor({timeout: 120000});
+await desk.waitForFunction(() => window.vm && vm.runtime.targets.length > 0, null, {timeout: 60000});
+await desk.waitForTimeout(1500);
+await desk.locator('button[data-id="lane-dash"]').click();
+await desk.getByRole('button', {name: 'START WITH RACER'}).click();
+await desk.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Stripes'), null, {timeout: 30000});
+check(true, 'The new game picker starts a game from a template');
+await desk.waitForTimeout(2500);
+await desk.evaluate(() => vm.renameSprite(vm.runtime.getSpriteTargetByName('Stripes').id, 'Lines'));
+await desk.waitForURL(/[?&]game=/, {timeout: 15000});
+check((await desk.textContent('a[class*="save-status_pill"]')).includes('Saved on this device'),
+    'Editing saves the game on this device');
+const savedUrl = desk.url();
+await desk.goto(`${BASE_URL}/my-games`);
+await desk.locator('article').first()
+    .waitFor();
+check(await desk.locator('article h2', {hasText: 'My racer'}).count() === 1, 'My games lists the saved game');
+await desk.goto(savedUrl);
+await desk.waitForFunction(() => window.vm && vm.runtime.targets.some(t => t.getName() === 'Lines'), null,
+    {timeout: 60000});
+check(true, 'A saved game reopens with its changes');
+await desk.close();
+
 check(pageErrors.length === 0, `No page errors${pageErrors.length ? `: ${pageErrors.slice(0, 3).join(' | ')}` : ''}`);
 await browser.close();
 
