@@ -38,10 +38,14 @@ await page.goto(`${BASE_URL}/`);
 check(await page.locator('h1', {hasText: 'Make games with friends'}).isVisible(), 'The landing page loads');
 check(await page.locator('article').count() === 4, 'The landing page shows 4 sample games');
 check(await page.evaluate(() => typeof window.vm === 'undefined'), 'The landing page loads no game engine');
+await page.locator('#jam-code-hero').fill('12');
+await page.locator('#jam-code-hero').press('Enter');
+check(await page.getByText('Jam codes are 4 numbers').isVisible(), 'A wrong jam code is explained');
 await page.locator('#jam-code-hero').fill('4827');
 await page.locator('#jam-code-hero').press('Enter');
-check(await page.getByText('Jams are coming soon!').isVisible(), 'Joining a jam says jams are coming soon');
-await page.keyboard.press('Escape');
+await page.waitForURL(/editor\.html\?jam=4827/);
+await page.locator('[aria-label="Your Sparkjam account"]').waitFor({timeout: 120000});
+check(true, 'Joining a jam opens the editor and asks to sign in');
 
 // Old links to a project on the home page go to the game page.
 await page.goto(`${BASE_URL}/#60917032`);

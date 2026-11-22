@@ -1,0 +1,421 @@
+/* Sparkjam jam screens (designs J1, J3, J4). */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+    font-family: var(--body);
+}
+
+.controls button {
+    cursor: pointer;
+}
+
+.start,
+.invite {
+    padding: 9px 11px;
+    border: 0;
+    background: var(--cyan);
+    color: var(--night);
+    font: 400 9px var(--px);
+    box-shadow: 3px 3px 0 var(--purple);
+    white-space: nowrap;
+}
+
+.invite {
+    background: var(--yellow);
+    box-shadow: 3px 3px 0 var(--pink);
+}
+
+.start:active,
+.invite:active {
+    transform: translate(2px, 2px);
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 9px;
+    font: 400 9px var(--px);
+    color: var(--lav);
+    border: 2px solid var(--edge);
+    white-space: nowrap;
+}
+
+.live-pill {
+    background: #1e3a2a;
+    color: #7ee081;
+    border-color: #2f6b47;
+}
+
+.live-pill i {
+    width: 8px;
+    height: 8px;
+    background: #7ee081;
+    box-shadow: 0 0 8px #7ee081;
+}
+
+.code-chip {
+    padding: 7px 9px;
+    background: none;
+    border: 2px dashed #4a2b78;
+    color: var(--lav);
+    font: 400 9px var(--px);
+    white-space: nowrap;
+}
+
+.avatars {
+    display: flex;
+    padding: 0 0 0 8px;
+    border: 0;
+    background: none;
+}
+
+.avatars > * {
+    margin-left: -8px;
+    border: 2px solid var(--night);
+}
+
+.avatar {
+    display: inline-grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    color: var(--night);
+    font: 400 11px var(--px);
+}
+
+.avatar-small {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+}
+
+.more {
+    display: inline-grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--plum);
+    color: #fff;
+    font: 600 11px var(--body);
+}
+
+.backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(20, 0, 31, 0.8);
+    font-family: var(--body);
+    color: #f4efff;
+}
+
+.modal {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    max-height: 100%;
+    overflow: auto;
+    padding: 28px;
+    background: var(--night);
+    border: 3px solid var(--edge);
+    border-radius: 14px;
+}
+
+.wide {
+    max-width: 640px;
+    border-color: var(--yellow);
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.live-title {
+    margin: 0;
+    font: 400 19px/1.3 var(--px);
+    color: var(--cyan);
+    text-shadow: 3px 3px 0 var(--purple);
+}
+
+.say {
+    margin: 0;
+    font: 400 24px/1.1 var(--vt);
+}
+
+.close {
+    margin-left: auto;
+    align-self: flex-start;
+    padding: 4px 8px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 18px;
+}
+
+.close:hover {
+    color: #fff;
+}
+
+.invite-body {
+    display: flex;
+    gap: 22px;
+    align-items: center;
+}
+
+.qr {
+    width: 180px;
+    height: 180px;
+    flex: none;
+}
+
+.invite-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+.label {
+    font: 400 9px var(--px);
+    color: var(--lav);
+}
+
+.big-code {
+    font: 400 30px/1.2 var(--px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--pink);
+    white-space: nowrap;
+}
+
+.link-row {
+    display: flex;
+    border: 3px solid var(--edge);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.link-row input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px;
+    border: 0;
+    background: var(--card);
+    color: #fff;
+    font: 14px var(--body);
+}
+
+.link-row button {
+    padding: 0 14px;
+    border: 0;
+    background: var(--lav);
+    color: var(--night);
+    font: 400 9px var(--px);
+}
+
+.actions {
+    display: flex;
+    gap: 14px;
+    margin-top: 22px;
+    flex-wrap: wrap;
+}
+
+.grow {
+    flex: 1;
+}
+
+.note {
+    margin: 16px 0 0;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--muted);
+}
+
+.panel {
+    position: fixed;
+    top: 56px;
+    right: 16px;
+    z-index: 900;
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    padding: 18px;
+    background: var(--night);
+    border: 3px solid var(--edge);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    font-family: var(--body);
+    color: #f4efff;
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--line);
+}
+
+.panel-head h2 {
+    margin: 0;
+    font: 400 12px var(--px);
+}
+
+.person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 2px solid var(--line);
+}
+
+.person > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.person b {
+    font-size: 16px;
+}
+
+.person span {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.person-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.person-actions button,
+.confirm button {
+    padding: 7px 8px;
+    border: 2px solid var(--edge);
+    background: none;
+    color: #fff;
+    font: 400 8px var(--px);
+}
+
+.person-actions button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.danger {
+    color: #ff6fa8 !important;
+}
+
+.empty {
+    margin: 14px 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.panel-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.confirm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+}
+
+.cursor {
+    position: fixed;
+    z-index: 50;
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    pointer-events: none;
+    transition: left 0.08s linear, top 0.08s linear;
+}
+
+.cursor b {
+    margin-top: 12px;
+    padding: 4px 6px;
+    color: var(--night);
+    font: 400 8px var(--px);
+    white-space: nowrap;
+}
+
+.activity {
+    position: fixed;
+    left: 340px;
+    bottom: 54px;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.activity p {
+    margin: 0;
+    padding: 8px 12px;
+    background: rgba(20, 0, 31, 0.92);
+    border: 2px solid var(--edge);
+    border-radius: 8px;
+    color: #f4efff;
+    font: 14px var(--body);
+}
+
+@media (max-width: 1250px) {
+    .code-chip {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .invite-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .qr {
+        align-self: center;
+    }
+
+    .big-code {
+        font-size: 22px;
+    }
+}
+
+/* While jamming the menu bar needs room: Feedback goes, and the save status shrinks to its dot. */
+:global(body.sj-jamming) [class*="menu-bar_feedback-link"] {
+    display: none;
+}
+
+:global(body.sj-jamming) [class*="save-status_pill"] {
+    font-size: 0 !important;
+    gap: 0 !important;
+}
+
+:global(body.sj-jamming) [class*="save-status_sign-in"] {
+    display: none;
+}
+
+@media (max-width: 1500px) {
+    :global(body.sj-jamming) [class*="menu-bar_sj-wordmark"] {
+        display: none;
+    }
+}

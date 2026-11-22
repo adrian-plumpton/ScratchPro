@@ -13,7 +13,8 @@ const params = typeof location === 'undefined' ? new URLSearchParams() : new URL
 
 // editor.html?blank and editor.html?new (Start making, which shows the new game picker) skip the
 // sample and open an empty project. editor.html?game=<id> opens a game from My games instead.
-let firstLoad = !params.has('blank') && !params.has('new');
+// editor.html?jam=<code> also starts empty: the jam's game is loaded once connected.
+let firstLoad = !params.has('blank') && !params.has('new') && !params.has('jam');
 
 /**
  * The sample game named in the page's ?sample= parameter, if it is one of ours.

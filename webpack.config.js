@@ -74,7 +74,8 @@ const base = {
     },
     module: {
         rules: [{
-            test: /\.jsx?$/,
+            // Sparkjam: .cjs too (Liveblocks ships CommonJS as .cjs).
+            test: /\.(jsx?|cjs)$/,
             loader: 'babel-loader',
             include: [
                 path.resolve(__dirname, 'src'),
@@ -83,7 +84,9 @@ const base = {
                 /node_modules[\\/]@vernier[\\/]godirect/,
                 // Sparkjam: sign-in (Netlify Identity) ships modern syntax.
                 /node_modules[\\/]@netlify[\\/]identity/,
-                /node_modules[\\/]gotrue-js/
+                /node_modules[\\/]gotrue-js/,
+                // Sparkjam: jams (Liveblocks) too.
+                /node_modules[\\/]@liveblocks[\\/]/
             ],
             options: {
                 // Explicitly disable babelrc so we don't catch various config

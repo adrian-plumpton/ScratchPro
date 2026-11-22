@@ -46,6 +46,7 @@ import gameStyles from '../components/sj-game/game-page.css';
 import {requestedSample} from '../lib/sample-project';
 import NewGamePicker from '../components/sj-editor/new-game-picker.jsx';
 import DeviceSaver from '../components/sj-editor/device-saver.jsx';
+import {JamOverlay} from '../components/sj-jam/jam-ui.jsx';
 
 import styles from './interface.css';
 
@@ -168,6 +169,7 @@ class Interface extends React.Component {
                         <SPMobileEditor />
                         {isEditor ? <NewGamePicker /> : null}
                         {isEditorPage ? <DeviceSaver /> : null}
+                        {isEditor ? <JamOverlay /> : null}
                         {isHomepage && !isBrowserSupported() ? (
                             <BrowserModal isRtl={isRtl} />
                         ) : null}

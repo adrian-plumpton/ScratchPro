@@ -12,6 +12,7 @@ import {listCloudGames, saveCloudGame} from '../../lib/sj-cloud';
 import {getAccount, isAccountReady, onAccount, startAuth} from '../../lib/sj-auth';
 import {setProjectTitle} from '../../reducers/project-title';
 import {setSaveStatus} from '../../lib/sj-save-status';
+import {isJamLoading} from '../../lib/sj-jam';
 import log from '../../lib/log';
 
 const SAVE_DELAY = 2000;
@@ -78,6 +79,8 @@ class DeviceSaver extends React.Component {
         this.loadedAt = Date.now();
         clearTimeout(this.timer);
         // The first load is the game in the address; anything loaded after that is a different game.
+        // A jam reloading its game is still the same game.
+        if (isJamLoading()) return;
         if (this.firstLoad) {
             this.firstLoad = false;
             // A game reopened from My games gets its saved name back.

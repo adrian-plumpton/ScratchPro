@@ -175,7 +175,7 @@ const Landing = () => {
                     id="jam"
                     aria-labelledby="jam-title"
                 >
-                    <p className={styles.kicker}>{'JAM MODE'}<span className={classNames(sj.soon, styles.soonTag)}>{'COMING SOON'}</span></p>
+                    <p className={styles.kicker}>{'JAM MODE'}</p>
                     <h2
                         className={styles.h2}
                         id="jam-title"
@@ -193,10 +193,10 @@ const Landing = () => {
                             <h3>{'One tap to open a jam'}</h3>
                             <p>{'Every game has a Jam button. Press it and your game goes live.'}</p>
                             <div className={styles.stepArt}>
-                                <button
+                                <a
                                     className={classNames(sj.btn, sj.btnCyan)}
-                                    onClick={() => soon('jam')}
-                                >{'▶ START A JAM'}</button>
+                                    href={links.jamOnSample('spark-hop')}
+                                >{'▶ START A JAM'}</a>
                             </div>
                         </div>
                         <div className={styles.step}>

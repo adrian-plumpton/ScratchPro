@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import {Lumi} from './pixel-art.jsx';
 import {AccountDialog, AccountButton, openAccountDialog} from './account.jsx';
 import {links, parseScratchProject} from '../../lib/sj-links';
+import {parseJamCode} from '../../lib/sj-jam-api';
 import styles from './sj.css';
 
 const Wordmark = () => (
@@ -165,6 +166,7 @@ SiteNavBar.propTypes = {
     clear: PropTypes.bool
 };
 
+// eslint-disable-next-line no-unused-vars
 const SiteFooter = ({onSoon}) => (
     <footer className={styles.footer}>
         <div className={styles.footerRow}>
@@ -176,7 +178,7 @@ const SiteFooter = ({onSoon}) => (
                 <div className={styles.footerCol}>
                     <span className={styles.footerHead}>{'PLAY'}</span>
                     <a href={links.games}>{'Games'}</a>
-                    <button onClick={() => onSoon('jam')}>{'Join a jam'}</button>
+                    <a href={`${links.home}#jam-code-hero`}>{'Join a jam'}</a>
                     <button onClick={() => openAccountDialog('save')}>{'Sign in'}</button>
                 </div>
                 <div className={styles.footerCol}>
@@ -266,38 +268,52 @@ GameCard.defaultProps = {
     headingLevel: 3
 };
 
-// Jam codes look like JAM-4827. Jams are not built yet, so joining explains that.
-const JamCodeField = ({onSoon, id}) => (
-    <form
-        className={styles.code}
-        onSubmit={e => {
-            e.preventDefault();
-            onSoon('jam');
-        }}
-    >
-        <label
-            className={styles.codePrefix}
-            htmlFor={id}
+// Jam codes look like JAM-4827. Joining opens the editor, which asks to sign in if needed.
+const JamCodeField = ({id}) => {
+    const [error, setError] = useState(false);
+    return (
+        <form
+            className={styles.codeForm}
+            onSubmit={e => {
+                e.preventDefault();
+                const code = parseJamCode(e.target.elements[id].value);
+                if (code) location.href = links.joinJam(code);
+                else setError(true);
+            }}
         >
-            <span className={styles.visuallyHidden}>{'Jam code'}</span>
-            {'JAM-'}
-        </label>
-        <input
-            id={id}
-            className={styles.codeInput}
-            inputMode="numeric"
-            autoComplete="off"
-            maxLength={4}
-            placeholder="____"
-        />
-        <button
-            className={styles.codeGo}
-            type="submit"
-        >{'JOIN'}</button>
-    </form>
-);
+            <div className={styles.code}>
+                <label
+                    className={styles.codePrefix}
+                    htmlFor={id}
+                >
+                    <span className={styles.visuallyHidden}>{'Jam code'}</span>
+                    {'JAM-'}
+                </label>
+                <input
+                    id={id}
+                    className={styles.codeInput}
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={4}
+                    placeholder="____"
+                    onChange={() => setError(false)}
+                    aria-invalid={error}
+                />
+                <button
+                    className={styles.codeGo}
+                    type="submit"
+                >{'JOIN'}</button>
+            </div>
+            {error ? (
+                <p
+                    className={styles.fieldError}
+                    role="alert"
+                >{'Jam codes are 4 numbers, like JAM-4827.'}</p>
+            ) : null}
+        </form>
+    );
+};
 JamCodeField.propTypes = {
-    onSoon: PropTypes.func.isRequired,
     id: PropTypes.string.isRequired
 };
 

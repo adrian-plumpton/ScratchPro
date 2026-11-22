@@ -85,6 +85,7 @@ import collectMetadata from '../../lib/collect-metadata';
 import styles from './menu-bar.css';
 import {SoonDialog} from '../sj/site.jsx';
 import {AccountDialog, AccountButton} from '../sj/account.jsx';
+import {JamControls} from '../sj-jam/jam-ui.jsx';
 import SJSaveStatus from '../sj-editor/save-status.jsx';
 import sj from '../sj/sj.css';
 import {links} from '../../lib/sj-links';
@@ -1055,10 +1056,7 @@ class MenuBar extends React.Component {
                 <div className={styles.accountInfoGroup}>
                     {/* Sparkjam: games save to My games automatically; File > Save is still there. */}
                     <SJSaveStatus />
-                    <button
-                        className={classNames(styles.sjButton, styles.sjJam)}
-                        onClick={this.handleSoonJam}
-                    >{'▶ START A JAM'}</button>
+                    <JamControls />
                     <div className={classNames(sj.tokens, styles.sjAccount)}>
                         <AccountButton className={classNames(styles.sjButton, styles.sjSignIn)} />
                         <AccountDialog />

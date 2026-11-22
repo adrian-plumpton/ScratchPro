@@ -43,3 +43,9 @@
   from = "/game"
   to = "/game.html"
   status = 200
+
+# Sparkjam: jam invite links (/j/4827) open the editor and join the jam.
+[[redirects]]
+  from = "/j/:code"
+  to = "/editor.html?jam=:code"
+  status = 302

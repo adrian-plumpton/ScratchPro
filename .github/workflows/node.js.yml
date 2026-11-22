@@ -25,3 +25,4 @@ jobs:
         npx playwright install --with-deps chromium
         (node scripts/serve-build.js 8601 >/dev/null 2>&1 &)
         npm run test:smoke
+        npm run test:jam

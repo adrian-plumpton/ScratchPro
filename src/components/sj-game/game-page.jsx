@@ -34,7 +34,7 @@ const currentSample = projectId => {
     return requestedSample() || getSampleGame('spark-hop');
 };
 
-const GameSide = ({isError, projectId, projectTitle, author, description, onFullScreen, onSoon}) => {
+const GameSide = ({isError, projectId, projectTitle, author, description, onFullScreen}) => {
     // The error screen in the stage column says what went wrong and what to do instead.
     if (isError) return null;
     const sample = currentSample(projectId);
@@ -100,12 +100,12 @@ const GameSide = ({isError, projectId, projectTitle, author, description, onFull
                     className={classNames(sj.btn, sj.btnGhost, sj.btnWide)}
                     href={sample ? links.remixSample(sample.id) : links.remixScratch(projectId)}
                 >{'REMIX'}</a>
-                <button
+                <a
                     className={classNames(sj.btn, sj.btnCyan, sj.btnWide)}
-                    onClick={() => onSoon('jam')}
-                >{'JAM ON THIS GAME'}</button>
+                    href={sample ? links.jamOnSample(sample.id) : links.jamOnScratch(projectId)}
+                >{'JAM ON THIS GAME'}</a>
             </div>
-            <p className={styles.note}>{'Remix without an account. Saving and jamming will need one.'}</p>
+            <p className={styles.note}>{'Remix without an account. Saving online and jamming need one.'}</p>
         </aside>
     );
 };
@@ -118,8 +118,7 @@ GameSide.propTypes = {
         instructions: PropTypes.string,
         credits: PropTypes.string
     }),
-    onFullScreen: PropTypes.func,
-    onSoon: PropTypes.func
+    onFullScreen: PropTypes.func
 };
 
 const ConnectedGameSide = connect(

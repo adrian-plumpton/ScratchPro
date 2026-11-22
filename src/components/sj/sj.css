@@ -517,3 +517,7 @@
         transform: none;
     }
 }
+
+.code-form .field-error {
+    margin-top: 8px !important;
+}
