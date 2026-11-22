@@ -116,10 +116,11 @@ const ProjectFetcherHOC = function (WrappedComponent) {
             let projectUrl = typeof URLSearchParams === 'undefined' ?
                 null :
                 new URLSearchParams(location.search).get('project_url');
-            // ScratchPro: the first page load opens the Spark Hop sample game instead of a blank project.
+            // ScratchPro: the first page load opens a sample game (?sample=, or Spark Hop) instead of
+            // a blank project.
             const sampleProject = takeSampleProject(!projectUrl && projectId === defaultProjectId);
             if (sampleProject) {
-                assetPromise = Promise.resolve({data: sampleProject});
+                assetPromise = Promise.resolve(sampleProject).then(data => ({data}));
             } else if (projectUrl) {
                 if (
                     !projectUrl.startsWith('http:') &&

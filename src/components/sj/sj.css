@@ -1,0 +1,516 @@
+/* Sparkjam: brand tokens and the pieces every page shares (buttons, nav, footer, game cards, dialogs). */
+
+.page {
+    --night: #14001f;
+    --plum: #2a0a3f;
+    --purple: #3b0a5a;
+    --pink: #ff2e88;
+    --yellow: #ffe14d;
+    --cyan: #36f9c6;
+    --lav: #c9a7ff;
+    --cream: #f3efe6;
+    --paper: #fbf6ea;
+    --ink: #24123f;
+    --muted: #b7a6d6;
+    --line: #2c1745;
+    --edge: #3a2160;
+    --card: #1a0629;
+    --scan: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 2px, transparent 2px 5px);
+    --px: "Press Start 2P", monospace;
+    --vt: "VT323", monospace;
+    --body: "Space Grotesk", system-ui, sans-serif;
+
+    min-height: 100vh;
+    background: var(--night);
+    color: #f4efff;
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+.page *,
+.page *::before,
+.page *::after {
+    box-sizing: border-box;
+}
+
+.page a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.page h1,
+.page h2,
+.page h3,
+.page p {
+    margin: 0;
+}
+
+.page :focus-visible {
+    outline: 3px solid var(--cyan);
+    outline-offset: 3px;
+}
+
+.px {
+    font-family: var(--px);
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Buttons: yellow with a hard pink shadow that presses in. */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font: 400 13px/1.2 var(--px);
+    padding: 17px 22px;
+    background: var(--yellow);
+    color: var(--night) !important;
+    box-shadow: 5px 5px 0 var(--pink);
+    white-space: nowrap;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    transition: transform 0.06s, box-shadow 0.06s;
+}
+
+.btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 6px 6px 0 var(--pink);
+}
+
+.btn:active {
+    transform: translate(4px, 4px);
+    box-shadow: 1px 1px 0 var(--pink);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #fff !important;
+    box-shadow: inset 0 0 0 3px #fff;
+}
+
+.btn-ghost:hover,
+.btn-ghost:active {
+    transform: none;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 3px #fff;
+}
+
+.btn-cyan {
+    background: var(--cyan);
+    box-shadow: 5px 5px 0 var(--purple);
+}
+
+.btn-cyan:hover {
+    box-shadow: 6px 6px 0 var(--purple);
+}
+
+.btn-cyan:active {
+    box-shadow: 1px 1px 0 var(--purple);
+}
+
+.btn-sm {
+    font-size: 10px;
+    padding: 12px 14px;
+    box-shadow: 3px 3px 0 var(--pink);
+}
+
+.btn-sm.btn-ghost {
+    box-shadow: inset 0 0 0 2px #fff;
+}
+
+.btn-wide {
+    width: 100%;
+}
+
+/* Top navigation. */
+.nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 56px;
+    border-bottom: 2px solid var(--line);
+    background: var(--night);
+}
+
+.nav-clear {
+    background: transparent;
+    border-color: transparent;
+}
+
+.wordmark {
+    font: 400 20px var(--px);
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 0 var(--pink);
+    white-space: nowrap;
+}
+
+.wordmark-a {
+    color: var(--yellow);
+}
+
+.wordmark-b {
+    color: #fff;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    font-size: 16px;
+    color: var(--muted);
+}
+
+.nav-links a:hover,
+.nav-links button:hover {
+    color: #fff;
+}
+
+.nav-on {
+    color: #fff;
+    font-weight: 600;
+}
+
+.nav-signin {
+    all: unset;
+    cursor: pointer;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* Game cards. */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.card {
+    background: var(--card);
+    border: 3px solid var(--edge);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-bottom: 3px solid var(--edge);
+    background: #000;
+}
+
+.card-body {
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.card-title {
+    font: 400 11px/1.4 var(--px);
+    color: #fff;
+}
+
+.card-kind {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.card-text {
+    font-size: 14px;
+    color: #cdbfe8;
+    line-height: 1.4;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+}
+
+.card-actions .btn {
+    flex: 1;
+}
+
+.chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.chip {
+    font: 400 8px var(--px);
+    padding: 7px 8px;
+    border: 2px solid #4a2b78;
+    color: #cdbfe8;
+}
+
+/* Jam code and link fields. */
+.code {
+    display: flex;
+    align-items: stretch;
+    border: 3px solid var(--lav);
+    background: var(--card);
+}
+
+.code-prefix {
+    font: 400 12px var(--px);
+    color: var(--lav);
+    display: grid;
+    place-items: center;
+    padding: 0 8px 0 14px;
+}
+
+.code-input {
+    all: unset;
+    font: 400 13px var(--px);
+    color: #fff;
+    width: 130px;
+    letter-spacing: 2px;
+    padding: 16px 0;
+}
+
+.code-input::placeholder {
+    color: #6f5a95;
+}
+
+.code-go {
+    all: unset;
+    cursor: pointer;
+    font: 400 11px var(--px);
+    background: var(--lav);
+    color: var(--night);
+    padding: 0 16px;
+    display: grid;
+    place-items: center;
+}
+
+.code-go:hover {
+    background: #dcc6ff;
+}
+
+.field {
+    display: flex;
+    border: 3px solid var(--lav);
+}
+
+.field-input {
+    all: unset;
+    flex: 1;
+    min-width: 0;
+    padding: 13px;
+    color: #fff;
+    font: 15px var(--body);
+}
+
+.field-input::placeholder {
+    color: #7e68a6;
+}
+
+.field-error {
+    margin-top: 10px !important;
+    color: var(--pink);
+    font-size: 14px;
+}
+
+/* Lumi's speech box: a retro dialog. */
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(20, 0, 31, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 16px;
+}
+
+.dialog {
+    position: relative;
+    max-width: 440px;
+    background: var(--night);
+    border: 5px solid #fff;
+    box-shadow: 0 0 0 5px var(--night), 0 0 0 10px var(--lav);
+    padding: 30px 24px 22px;
+    color: #fff;
+}
+
+.dialog-who {
+    position: absolute;
+    top: -20px;
+    left: 16px;
+    background: var(--yellow);
+    color: var(--night);
+    font: 400 10px var(--px);
+    padding: 8px 10px;
+}
+
+.dialog-say {
+    font: 400 26px/1.1 var(--vt);
+}
+
+.dialog-small {
+    display: block;
+    font: 15px/1.45 var(--body);
+    color: var(--muted);
+    margin-top: 12px !important;
+}
+
+.dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 20px;
+}
+
+/* Footer. */
+.footer {
+    padding: 46px 56px 34px;
+    background: #0b0012;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.footer-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    flex-wrap: wrap;
+}
+
+.footer-cols {
+    display: flex;
+    gap: 56px;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    align-items: flex-start;
+}
+
+.footer-col a:hover,
+.footer-col button:hover {
+    color: #fff;
+}
+
+.footer-col button {
+    all: unset;
+    cursor: pointer;
+}
+
+.footer-head {
+    font: 400 9px var(--px);
+    color: var(--yellow);
+    margin-bottom: 6px;
+}
+
+.legal {
+    margin-top: 30px !important;
+    padding-top: 18px;
+    border-top: 2px solid #241034;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #7e68a6;
+}
+
+.soon {
+    display: inline-block;
+    font: 400 8px var(--px);
+    background: var(--pink);
+    color: #fff;
+    padding: 7px 8px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .nav {
+        padding: 14px 16px;
+    }
+
+    .nav-links .nav-hide {
+        display: none;
+    }
+
+    .wordmark {
+        font-size: 15px;
+    }
+
+    .nav .btn {
+        font-size: 9px;
+        padding: 11px 12px;
+    }
+
+    .cards {
+        gap: 12px;
+    }
+
+    .card-body {
+        padding: 10px;
+    }
+
+    .card-title {
+        font-size: 9px;
+    }
+
+    .card-text {
+        display: none;
+    }
+
+    .card-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .code {
+        width: 100%;
+    }
+
+    .code-input {
+        width: 0;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .footer {
+        padding: 36px 16px;
+    }
+
+    .footer-cols {
+        gap: 34px;
+        flex-wrap: wrap;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .btn,
+    .btn:hover,
+    .btn:active {
+        transition: none;
+        transform: none;
+    }
+}

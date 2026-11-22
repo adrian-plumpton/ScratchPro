@@ -98,15 +98,18 @@ class HashRouter extends Router {
 class FileHashRouter extends HashRouter {
     constructor (callbacks) {
         super(callbacks);
-        this.playerPath = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
-        this.editorPath = `${this.playerPath}editor.html`;
-        this.fullscreenPath = `${this.playerPath}fullscreen.html`;
+        const dir = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+        // Sparkjam: the player is the game page (/game, served from game.html); / is the landing page.
+        this.playerPaths = [`${dir}game`, `${dir}game.html`];
+        this.playerPath = this.playerPaths.includes(location.pathname) ? location.pathname : this.playerPaths[0];
+        this.editorPath = `${dir}editor.html`;
+        this.fullscreenPath = `${dir}fullscreen.html`;
     }
 
     onpathchange () {
         const pathName = location.pathname;
 
-        if (pathName === this.playerPath) {
+        if (this.playerPaths.includes(pathName)) {
             this.onSetIsPlayerOnly(true);
             this.onSetIsFullScreen(false);
         } else if (pathName === this.editorPath) {

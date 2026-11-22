@@ -27,3 +27,14 @@
   for = "/play-sw.js"
   [headers.values]
     Cache-Control = "no-cache"
+
+# Sparkjam: clean URLs for the games gallery and the game page.
+[[redirects]]
+  from = "/games"
+  to = "/games.html"
+  status = 200
+
+[[redirects]]
+  from = "/game"
+  to = "/game.html"
+  status = 200

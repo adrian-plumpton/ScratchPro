@@ -44,7 +44,9 @@ const base = {
         // allows ROUTING_STYLE=wildcard to work properly
         historyApiFallback: {
             rewrites: [
-                {from: /^\/\d+\/?$/, to: '/index.html'},
+                {from: /^\/\d+\/?$/, to: '/game.html'},
+                {from: /^\/game\/?$/, to: '/game.html'},
+                {from: /^\/games\/?$/, to: '/games.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
                 {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
@@ -151,6 +153,8 @@ module.exports = [
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
             'play': './src/playground/play.jsx',
+            'landing': './src/playground/landing.jsx',
+            'games': './src/playground/games.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
             'credits': './src/playground/credits/credits.jsx'
         },
@@ -196,10 +200,30 @@ module.exports = [
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
+                // Sparkjam: the landing page. Light, with no game engine.
+                chunks: ['landing'],
+                template: 'src/playground/sparkjam.ejs',
+                filename: 'index.html',
+                title: `${APP_NAME} - Make games with friends. Play them anywhere.`,
+                description: 'A tiny game studio in your browser. Snap blocks together, jam with friends ' +
+                    'and play your games on any phone.',
+                forwardOldLinks: true,
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['games'],
+                template: 'src/playground/sparkjam.ejs',
+                filename: 'games.html',
+                title: `Games - ${APP_NAME}`,
+                description: 'Play sample games in your browser, then remix them to see how they work.',
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                // Sparkjam: the game page (/game?sample=spark-hop or /game#123456).
                 chunks: ['player'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
-                title: `${APP_NAME} - Make and play games on any device`,
+                filename: 'game.html',
+                title: `Play - ${APP_NAME}`,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
