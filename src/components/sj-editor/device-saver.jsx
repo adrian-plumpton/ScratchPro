@@ -106,7 +106,8 @@ class DeviceSaver extends React.Component {
         setSaveStatus({state: 'idle', savedAt: null});
     }
     handleChanged () {
-        if (this.props.isPlayerOnly || Date.now() - this.loadedAt < SETTLE_TIME) return;
+        // Nothing counts as an edit until a game has loaded and settled.
+        if (this.props.isPlayerOnly || !this.loadedAt || Date.now() - this.loadedAt < SETTLE_TIME) return;
         setSaveStatus({state: 'unsaved'});
         clearTimeout(this.timer);
         this.timer = setTimeout(this.save, SAVE_DELAY);

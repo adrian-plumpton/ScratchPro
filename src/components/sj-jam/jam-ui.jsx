@@ -455,7 +455,16 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
                 className={styles.start}
                 onClick={start}
                 disabled={starting}
-            >{starting ? 'STARTING…' : '▶ START A JAM'}</button>
+                aria-label="Start a jam"
+            >
+                {starting ? 'STARTING…' : (
+                    <React.Fragment>
+                        {'▶ '}
+                        <span className={styles.long}>{'START A '}</span>
+                        {'JAM'}
+                    </React.Fragment>
+                )}
+            </button>
         );
     }
 

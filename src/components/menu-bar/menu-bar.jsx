@@ -31,7 +31,6 @@ import SettingsMenu from './settings-menu.jsx';
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
-import TWNews from './tw-news.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -1078,7 +1077,6 @@ class MenuBar extends React.Component {
         return (
             <React.Fragment>
                 {menuBar}
-                <TWNews />
             </React.Fragment>
         );
     }

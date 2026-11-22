@@ -300,3 +300,20 @@
 .sj-account .sj-button {
     margin-left: 0;
 }
+
+/* Sparkjam: on narrower screens, make room for the game's name, the jam controls and Sign in. */
+@media (max-width: 1450px) {
+    .feedback-link {
+        display: none;
+    }
+}
+
+@media (max-width: 1300px) {
+    .community-button-wrapper {
+        display: none;
+    }
+}
+
+.title-field-growable {
+    min-width: 110px;
+}
