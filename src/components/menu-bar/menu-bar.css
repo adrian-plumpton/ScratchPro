@@ -289,3 +289,14 @@
         display: none;
     }
 }
+
+.sj-account {
+    display: flex;
+    align-items: center;
+    margin-left: 12px;
+    font-family: "Space Grotesk", system-ui, sans-serif;
+}
+
+.sj-account .sj-button {
+    margin-left: 0;
+}

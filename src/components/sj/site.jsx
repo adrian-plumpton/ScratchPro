@@ -6,6 +6,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {Lumi} from './pixel-art.jsx';
+import {AccountDialog, AccountButton, openAccountDialog} from './account.jsx';
 import {links, parseScratchProject} from '../../lib/sj-links';
 import styles from './sj.css';
 
@@ -109,7 +110,24 @@ const useSoon = () => {
     return [dialog, setWhat];
 };
 
+// onSoon is kept for pages that pass it; sign-in is real now.
+// eslint-disable-next-line no-unused-vars
 const SiteNav = ({active, clear, onSoon}) => (
+    <React.Fragment>
+        <AccountDialog />
+        <SiteNavBar
+            active={active}
+            clear={clear}
+        />
+    </React.Fragment>
+);
+SiteNav.propTypes = {
+    active: PropTypes.string,
+    clear: PropTypes.bool,
+    onSoon: PropTypes.func.isRequired
+};
+
+const SiteNavBar = ({active, clear}) => (
     <nav
         className={classNames(styles.nav, {[styles.navClear]: clear})}
         aria-label="Main"
@@ -134,10 +152,7 @@ const SiteNav = ({active, clear, onSoon}) => (
                 className={styles.navHide}
                 href={`${links.home}#makers`}
             >{'For makers'}</a>
-            <button
-                className={classNames(styles.navSignin, styles.navHide)}
-                onClick={() => onSoon('signin')}
-            >{'Sign in'}</button>
+            <AccountButton className={classNames(styles.navSignin, styles.navHide)} />
             <a
                 className={classNames(styles.btn, styles.btnSm)}
                 href={links.newGame}
@@ -145,10 +160,9 @@ const SiteNav = ({active, clear, onSoon}) => (
         </div>
     </nav>
 );
-SiteNav.propTypes = {
+SiteNavBar.propTypes = {
     active: PropTypes.string,
-    clear: PropTypes.bool,
-    onSoon: PropTypes.func.isRequired
+    clear: PropTypes.bool
 };
 
 const SiteFooter = ({onSoon}) => (
@@ -163,7 +177,7 @@ const SiteFooter = ({onSoon}) => (
                     <span className={styles.footerHead}>{'PLAY'}</span>
                     <a href={links.games}>{'Games'}</a>
                     <button onClick={() => onSoon('jam')}>{'Join a jam'}</button>
-                    <button onClick={() => onSoon('signin')}>{'Sign in'}</button>
+                    <button onClick={() => openAccountDialog('save')}>{'Sign in'}</button>
                 </div>
                 <div className={styles.footerCol}>
                     <span className={styles.footerHead}>{'MAKE'}</span>

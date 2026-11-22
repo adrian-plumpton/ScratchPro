@@ -84,6 +84,7 @@ import collectMetadata from '../../lib/collect-metadata';
 
 import styles from './menu-bar.css';
 import {SoonDialog} from '../sj/site.jsx';
+import {AccountDialog, AccountButton} from '../sj/account.jsx';
 import SJSaveStatus from '../sj-editor/save-status.jsx';
 import sj from '../sj/sj.css';
 import {links} from '../../lib/sj-links';
@@ -217,7 +218,6 @@ class MenuBar extends React.Component {
         this.state = {soon: null};
         bindAll(this, [
             'handleSoonJam',
-            'handleSoonSignIn',
             'handleCloseSoon',
             'handleClickSeeInside',
             'handleClickNew',
@@ -264,9 +264,6 @@ class MenuBar extends React.Component {
     }
     handleSoonJam () {
         this.setState({soon: 'jam'});
-    }
-    handleSoonSignIn () {
-        this.setState({soon: 'signin'});
     }
     handleCloseSoon () {
         this.setState({soon: null});
@@ -1062,10 +1059,10 @@ class MenuBar extends React.Component {
                         className={classNames(styles.sjButton, styles.sjJam)}
                         onClick={this.handleSoonJam}
                     >{'▶ START A JAM'}</button>
-                    <button
-                        className={classNames(styles.sjButton, styles.sjSignIn)}
-                        onClick={this.handleSoonSignIn}
-                    >{'SIGN IN'}</button>
+                    <div className={classNames(sj.tokens, styles.sjAccount)}>
+                        <AccountButton className={classNames(styles.sjButton, styles.sjSignIn)} />
+                        <AccountDialog />
+                    </div>
                 </div>
                 {this.state.soon ? (
                     <div className={sj.tokens}>

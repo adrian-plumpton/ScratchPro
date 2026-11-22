@@ -1,19 +1,23 @@
-// Sparkjam: keeps the game being edited in "My games" (saved in this browser). A couple of seconds
-// after each change, the game is saved; the first save adds it to My games and puts ?game=<id> in
-// the address so a reload opens it again. Loading a different game starts a new entry.
+// Sparkjam: keeps the game being edited in "My games". A couple of seconds after each change the game
+// is saved in this browser and, for a signed-in maker, to their account too. The first save adds it to
+// My games and puts ?game=<id> in the address so a reload opens it again. Loading a different game
+// starts a new entry.
 
 import bindAll from 'lodash.bindall';
 import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import {getGame, saveGame} from '../../lib/sj-library';
+import {listCloudGames, saveCloudGame} from '../../lib/sj-cloud';
+import {getAccount, isAccountReady, onAccount, startAuth} from '../../lib/sj-auth';
 import {setProjectTitle} from '../../reducers/project-title';
 import {setSaveStatus} from '../../lib/sj-save-status';
 import log from '../../lib/log';
 
 const SAVE_DELAY = 2000;
 // Changes reported while a project is still settling after loading aren't edits.
-const SETTLE_TIME = 1500;
+// Extensions (like the Phone blocks) can finish loading a few seconds later.
+const SETTLE_TIME = 5000;
 const THUMBNAIL_WIDTH = 320;
 
 const params = () => new URLSearchParams(location.search);
@@ -59,12 +63,15 @@ class DeviceSaver extends React.Component {
         this.props.vm.on('PROJECT_CHANGED', this.handleChanged);
         this.props.vm.runtime.on('PROJECT_LOADED', this.handleLoaded);
         document.addEventListener('visibilitychange', this.handleHidden);
-        setSaveStatus({state: this.gameId ? 'saved' : 'idle', savedAt: null});
+        startAuth();
+        this.stopAccount = onAccount(() => setSaveStatus({account: isAccountReady(getAccount())}));
+        setSaveStatus({state: this.gameId ? 'saved' : 'idle', savedAt: null, account: isAccountReady(getAccount())});
     }
     componentWillUnmount () {
         this.props.vm.off('PROJECT_CHANGED', this.handleChanged);
         this.props.vm.runtime.off('PROJECT_LOADED', this.handleLoaded);
         document.removeEventListener('visibilitychange', this.handleHidden);
+        if (this.stopAccount) this.stopAccount();
         clearTimeout(this.timer);
     }
     handleLoaded () {
@@ -75,7 +82,15 @@ class DeviceSaver extends React.Component {
             this.firstLoad = false;
             // A game reopened from My games gets its saved name back.
             if (this.gameId) {
-                getGame(this.gameId)
+                const id = this.gameId;
+                getGame(id)
+                    .catch(() => null)
+                    .then(async game => {
+                        if (game) return game;
+                        // Opened from the account rather than this device.
+                        if (!isAccountReady(await startAuth())) return null;
+                        return (await listCloudGames()).find(g => g.id === id);
+                    })
                     .then(game => {
                         if (game && game.title) this.props.onSetTitle(game.title);
                     })
@@ -113,17 +128,37 @@ class DeviceSaver extends React.Component {
                     this.props.vm.saveProjectSb3(),
                     thumbnail(this.props.vm)
                 ]);
-                const id = await saveGame({
+                const game = {
                     id: this.gameId,
                     title: this.props.projectTitle || 'Untitled game',
                     sb3,
                     thumbnail: picture
-                });
+                };
+                let id = null;
+                try {
+                    id = await saveGame(game);
+                } catch (err) {
+                    // This browser can't save games (eg. private browsing); the account still can.
+                    log.warn('Could not save the game in this browser', err);
+                    id = this.gameId || Array.from(crypto.getRandomValues(new Uint8Array(8)),
+                        b => b.toString(16).padStart(2, '0')).join('');
+                }
                 if (id !== this.gameId) {
                     this.gameId = id;
                     setGameParam(id);
                 }
-                setSaveStatus({state: 'saved', savedAt: Date.now()});
+                let where = 'device';
+                if (isAccountReady(getAccount())) {
+                    try {
+                        await saveCloudGame({...game, id});
+                        where = 'account';
+                    } catch (err) {
+                        log.error('Could not save the game to the account', err);
+                        setSaveStatus({state: 'saved', where: 'device', cloudError: err.message, savedAt: Date.now()});
+                        return;
+                    }
+                }
+                setSaveStatus({state: 'saved', where, cloudError: null, savedAt: Date.now()});
             } catch (err) {
                 log.error('Could not save the game on this device', err);
                 setSaveStatus({state: 'error'});

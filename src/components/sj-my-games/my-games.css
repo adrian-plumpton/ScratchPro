@@ -271,3 +271,24 @@
         font-size: 15px;
     }
 }
+
+.where {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 6px;
+    font: 400 7px var(--px);
+    border: 2px solid #4a2b78;
+    color: #cdbfe8;
+}
+
+.where-cloud {
+    border-color: #2f6b47;
+    color: #7ee081;
+}
+
+.working {
+    display: block;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--yellow);
+}

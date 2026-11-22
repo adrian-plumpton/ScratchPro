@@ -172,7 +172,10 @@ await desk.locator('button[data-id="lane-dash"]').click();
 await desk.getByRole('button', {name: 'START WITH RACER'}).click();
 await desk.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Stripes'), null, {timeout: 30000});
 check(true, 'The new game picker starts a game from a template');
-await desk.waitForTimeout(2500);
+// A just-loaded game gets a few seconds to settle before changes count as edits.
+await desk.waitForTimeout(5500);
+check((await desk.textContent('a[class*="save-status_pill"]')).includes('Not saved yet'),
+    'Opening a game without changing it saves nothing');
 await desk.evaluate(() => vm.renameSprite(vm.runtime.getSpriteTargetByName('Stripes').id, 'Lines'));
 await desk.waitForURL(/[?&]game=/, {timeout: 15000});
 check((await desk.textContent('a[class*="save-status_pill"]')).includes('Saved on this device'),

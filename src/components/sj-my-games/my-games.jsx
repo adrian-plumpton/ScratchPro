@@ -1,5 +1,5 @@
-// Sparkjam: My games (/my-games, design A3). The games saved in this browser: open, rename,
-// download or delete them, or start a new one. Online saving comes with accounts.
+// Sparkjam: My games (/my-games, design A3). Games saved to the maker's account and in this browser,
+// together: open, rename, download, delete, or save a this-device-only game to the account.
 /* eslint-disable react/jsx-no-bind */ // Function components with hooks; handlers are cheap here.
 
 import React, {useEffect, useState} from 'react';
@@ -8,13 +8,23 @@ import classNames from 'classnames';
 import {Lumi} from '../sj/pixel-art.jsx';
 import {SiteNav, SiteFooter, useSoon, JamCodeField, styles as sj} from '../sj/site.jsx';
 import {listGames, getGame, renameGame, deleteGame, timeAgo} from '../../lib/sj-library';
+import {listCloudGames, loadCloudGame, saveCloudGame, deleteCloudGame} from '../../lib/sj-cloud';
+import {isAccountReady} from '../../lib/sj-auth';
+import {useAccount, openAccountDialog} from '../sj/account.jsx';
 import {links} from '../../lib/sj-links';
 import styles from './my-games.css';
 
+// The game's .sb3, from this browser if it's here, otherwise from the account.
+const gameBlob = async game => {
+    if (game.local) {
+        const full = await getGame(game.id);
+        if (full) return full.sb3;
+    }
+    return new Blob([await loadCloudGame(game.id)]);
+};
+
 const download = async game => {
-    const full = await getGame(game.id);
-    if (!full) return;
-    const url = URL.createObjectURL(full.sb3);
+    const url = URL.createObjectURL(await gameBlob(game));
     const a = document.createElement('a');
     a.href = url;
     a.download = `${game.title || 'game'}.sb3`;
@@ -24,7 +34,8 @@ const download = async game => {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-const GameTile = ({game, onChanged}) => {
+const GameTile = ({game, canSaveOnline, onChanged}) => {
+    const [working, setWorking] = useState('');
     const [menu, setMenu] = useState(false);
     const [renaming, setRenaming] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
@@ -58,7 +69,15 @@ const GameTile = ({game, onChanged}) => {
                             onSubmit={async e => {
                                 e.preventDefault();
                                 const title = e.target.elements.title.value.trim();
-                                if (title) await renameGame(game.id, title);
+                                if (title && title !== game.title) {
+                                    if (game.local) await renameGame(game.id, title);
+                                    if (game.cloud) {
+                                        await saveCloudGame({id: game.id,
+                                            title,
+                                            sb3: await gameBlob(game),
+                                            thumbnail: game.thumbnail});
+                                    }
+                                }
                                 setRenaming(false);
                                 onChanged();
                             }}
@@ -86,6 +105,10 @@ const GameTile = ({game, onChanged}) => {
                         </h2>
                     )}
                     <span className={styles.when}>{`Edited ${timeAgo(game.updatedAt)}`}</span>
+                    <span className={classNames(styles.where, {[styles.whereCloud]: game.cloud})}>
+                        {game.cloud ? 'ON YOUR ACCOUNT' : 'THIS DEVICE ONLY'}
+                    </span>
+                    {working ? <span className={styles.working}>{working}</span> : null}
                 </div>
                 <div className={styles.more}>
                     <button
@@ -102,14 +125,24 @@ const GameTile = ({game, onChanged}) => {
                             {confirmDelete ? (
                                 <React.Fragment>
                                     <p className={styles.confirm}>
-                                        {'Delete this game from this device? You can\'t undo this.'}
+                                        {game.cloud ?
+                                            'Delete this game from your account and this device? ' +
+                                                'You can\'t undo this.' :
+                                            'Delete this game from this device? You can\'t undo this.'}
                                     </p>
                                     <button
                                         role="menuitem"
                                         className={styles.danger}
                                         onClick={async () => {
-                                            await deleteGame(game.id);
                                             close();
+                                            setWorking('Deleting…');
+                                            try {
+                                                if (game.cloud) await deleteCloudGame(game.id);
+                                                if (game.local) await deleteGame(game.id);
+                                            } catch (err) {
+                                                setWorking(err.message);
+                                                return;
+                                            }
                                             onChanged();
                                         }}
                                     >{'Yes, delete it'}</button>
@@ -131,11 +164,31 @@ const GameTile = ({game, onChanged}) => {
                                             setRenaming(true);
                                         }}
                                     >{'Rename'}</button>
+                                    {canSaveOnline && !game.cloud ? (
+                                        <button
+                                            role="menuitem"
+                                            onClick={async () => {
+                                                close();
+                                                setWorking('Saving to your account…');
+                                                try {
+                                                    const full = await getGame(game.id);
+                                                    await saveCloudGame({id: game.id,
+                                                        title: game.title,
+                                                        sb3: full.sb3,
+                                                        thumbnail: game.thumbnail});
+                                                    setWorking('');
+                                                    onChanged();
+                                                } catch (err) {
+                                                    setWorking(err.message);
+                                                }
+                                            }}
+                                        >{'Save to my account'}</button>
+                                    ) : null}
                                     <button
                                         role="menuitem"
                                         onClick={() => {
                                             close();
-                                            download(game);
+                                            download(game).catch(err => setWorking(err.message));
                                         }}
                                     >{'Download .sb3'}</button>
                                     <button
@@ -157,25 +210,48 @@ GameTile.propTypes = {
         id: PropTypes.string,
         title: PropTypes.string,
         thumbnail: PropTypes.string,
-        updatedAt: PropTypes.number
+        updatedAt: PropTypes.number,
+        local: PropTypes.bool,
+        cloud: PropTypes.bool
     }).isRequired,
+    canSaveOnline: PropTypes.bool,
     onChanged: PropTypes.func.isRequired
 };
 
 const MyGames = () => {
     const [soonDialog, soon] = useSoon();
+    const account = useAccount();
+    const ready = isAccountReady(account);
     const [games, setGames] = useState(null);
     const [failed, setFailed] = useState(false);
+    const [cloudError, setCloudError] = useState('');
     const [query, setQuery] = useState('');
-    const refresh = () => listGames()
-        .then(setGames)
-        .catch(() => {
+    const refresh = async () => {
+        const byId = new Map();
+        try {
+            (await listGames()).forEach(g => byId.set(g.id, {...g, local: true, cloud: false}));
+            setFailed(false);
+        } catch (e) {
             setFailed(true);
-            setGames([]);
-        });
+        }
+        if (ready) {
+            try {
+                (await listCloudGames()).forEach(g => {
+                    const mine = byId.get(g.id);
+                    byId.set(g.id, mine && mine.updatedAt > g.updatedAt ?
+                        {...mine, cloud: true} :
+                        {...g, local: !!mine, cloud: true, thumbnail: g.thumbnail || (mine && mine.thumbnail)});
+                });
+                setCloudError('');
+            } catch (e) {
+                setCloudError(e.message);
+            }
+        }
+        setGames([...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt));
+    };
     useEffect(() => {
         refresh();
-    }, []);
+    }, [ready]);
     const q = query.trim().toLowerCase();
     const shown = (games || []).filter(g => !q || (g.title || '').toLowerCase()
         .includes(q));
@@ -213,12 +289,25 @@ const MyGames = () => {
                         phone
                         px={2}
                     />
-                    <p>
-                        {'These games are saved in this browser, as you make them. '}
-                        <button onClick={() => soon('signin')}>{'Accounts'}</button>
-                        {' will keep them online and on all your devices.'}
-                    </p>
+                    {ready ? (
+                        <p>
+                            {`Signed in as ${account.makerName}. Games you make save to your account and in this ` +
+                                'browser, so you can open them anywhere.'}
+                        </p>
+                    ) : (
+                        <p>
+                            {'These games are saved in this browser, as you make them. '}
+                            <button onClick={() => openAccountDialog('save')}>{'Sign in'}</button>
+                            {' to keep them online and on all your devices.'}
+                        </p>
+                    )}
                 </div>
+                {cloudError ? (
+                    <p
+                        className={styles.error}
+                        role="alert"
+                    >{`${cloudError} Games on this device are shown below.`}</p>
+                ) : null}
 
                 {failed ? (
                     <p
@@ -234,6 +323,7 @@ const MyGames = () => {
                             <GameTile
                                 key={game.id}
                                 game={game}
+                                canSaveOnline={ready}
                                 onChanged={refresh}
                             />
                         ))}

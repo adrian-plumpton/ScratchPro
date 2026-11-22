@@ -80,7 +80,10 @@ const base = {
                 path.resolve(__dirname, 'src'),
                 /node_modules[\\/]scratch-[^\\/]+[\\/]src/,
                 /node_modules[\\/]pify/,
-                /node_modules[\\/]@vernier[\\/]godirect/
+                /node_modules[\\/]@vernier[\\/]godirect/,
+                // Sparkjam: sign-in (Netlify Identity) ships modern syntax.
+                /node_modules[\\/]@netlify[\\/]identity/,
+                /node_modules[\\/]gotrue-js/
             ],
             options: {
                 // Explicitly disable babelrc so we don't catch various config
@@ -144,6 +147,9 @@ const base = {
 if (!process.env.CI) {
     base.plugins.push(new webpack.ProgressPlugin());
 }
+
+// Sparkjam: @netlify/identity optionally loads Next.js helpers on servers; the browser never needs them.
+base.plugins.push(new webpack.IgnorePlugin({resourceRegExp: /^next\/headers$/}));
 
 module.exports = [
     // to run editor examples

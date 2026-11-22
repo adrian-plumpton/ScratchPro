@@ -49,3 +49,24 @@
         gap: 0;
     }
 }
+
+.wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sign-in {
+    all: unset;
+    cursor: pointer;
+    color: #ffe14d;
+    font: 600 13px "Space Grotesk", system-ui, sans-serif;
+    white-space: nowrap;
+    text-decoration: underline;
+}
+
+@media (max-width: 1600px) {
+    .sign-in {
+        display: none;
+    }
+}

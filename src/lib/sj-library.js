@@ -123,9 +123,25 @@ const timeAgo = (time, now = Date.now()) => {
  * @returns {Promise<ArrayBuffer>} The game's .sb3, for loading into the editor.
  */
 const loadGameData = async id => {
-    const game = await getGame(id);
-    if (!game) throw new SavedGameMissingError(`Game ${id} is not saved in this browser`);
-    return game.sb3.arrayBuffer();
+    let game = null;
+    try {
+        game = await getGame(id);
+    } catch (e) {
+        // This browser can't save games; the account might have it.
+    }
+    if (game) return game.sb3.arrayBuffer();
+    // Not on this device: try the signed-in maker's account.
+    const {startAuth, isAccountReady} = await import(/* webpackChunkName: "sj-auth" */ './sj-auth');
+    const {loadCloudGame} = await import(/* webpackChunkName: "sj-auth" */ './sj-cloud');
+    const account = await startAuth();
+    if (isAccountReady(account)) {
+        try {
+            return await loadCloudGame(id);
+        } catch (e) {
+            // Fall through to "can't find it".
+        }
+    }
+    throw new SavedGameMissingError(`Game ${id} is not saved in this browser or account`);
 };
 
 export {
