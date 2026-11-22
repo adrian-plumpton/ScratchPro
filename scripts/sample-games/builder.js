@@ -171,6 +171,7 @@ const createProject = () => {
             TOWARDS: menu('motion_pointtowards_menu', 'TOWARDS', name)
         }}),
         rotationStyle: style => mk('motion_setrotationstyle', {fields: {STYLE: [style, null]}}),
+        play: name => mk('sound_play', {inputs: {SOUND_MENU: menu('sound_sounds_menu', 'SOUND_MENU', name)}}),
         wear: name => mk('looks_switchcostumeto', {inputs: {COSTUME: menu('looks_costume', 'COSTUME', name)}}),
         show: () => mk('looks_show'),
         hide: () => mk('looks_hide'),
@@ -248,6 +249,22 @@ const createProject = () => {
     b.script = script;
     b.define = define;
 
+    // A sound, from a WAV Buffer (see sfx.js).
+    const sound = (name, wav) => {
+        const md5 = crypto.createHash('md5').update(wav)
+            .digest('hex');
+        assets.set(`${md5}.wav`, wav);
+        return {
+            name,
+            assetId: md5,
+            dataFormat: 'wav',
+            format: '',
+            rate: wav.readUInt32LE(24),
+            sampleCount: (wav.length - 44) / 2,
+            md5ext: `${md5}.wav`
+        };
+    };
+
     const costume = (name, svg, cx, cy) => {
         const md5 = crypto.createHash('md5').update(svg)
             .digest('hex');
@@ -308,7 +325,7 @@ const createProject = () => {
             comments: {},
             currentCostume: 0,
             costumes: options.costumes.map(([name, svg]) => costume(name, svg, 240, 180)),
-            sounds: [],
+            sounds: (options.sounds || []).map(([name, wav]) => sound(name, wav)),
             volume: 100,
             layerOrder: 0,
             tempo: 60,
@@ -341,7 +358,7 @@ const createProject = () => {
             comments: {},
             currentCostume: 0,
             costumes: options.costumes.map(([cName, svg, cx, cy]) => costume(cName, svg, cx, cy)),
-            sounds: [],
+            sounds: (options.sounds || []).map(([sName, wav]) => sound(sName, wav)),
             volume: 100,
             layerOrder: targets.length,
             visible: options.visible !== false,
@@ -385,7 +402,7 @@ const createProject = () => {
         };
         const zip = new JSZip();
         zip.file('project.json', JSON.stringify(project));
-        for (const [name, svg] of assets) zip.file(name, svg);
+        for (const [name, data] of assets) zip.file(name, data);
         const buffer = await zip.generateAsync({type: 'nodebuffer', compression: 'DEFLATE', platform: 'UNIX'});
         fs.mkdirSync(path.dirname(file), {recursive: true});
         fs.writeFileSync(file, buffer);

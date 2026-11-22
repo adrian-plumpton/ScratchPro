@@ -2,6 +2,7 @@
 // It uses no keys, so it shows that tap-only games get no on-screen controls.
 
 const {svgDoc, seeded} = require('./builder');
+const {SFX} = require('./sfx');
 
 const C = {
     top: '#1b9aaa',
@@ -89,13 +90,14 @@ const build = project => {
 
     project.sprite('Bubble', {
         costumes: [['bubble', bubbleSvg, 26, 26], ['urchin', urchinSvg, 26, 26]],
+        sounds: [['pop', SFX.pop()], ['ouch', SFX.ouch()]],
         variables: {rise: 0, wobble: 0, popped: 0},
         visible: false,
         scripts: b => {
             const {script, whenFlag, whenClone, whenClicked, hide, show, forever, wait, ifThen, ifElse, eq, lt,
                 gt, and, v, setv, chg, cloneMyself, wear, random, setSize, gotoXY, repeatUntil, ypos, changeY,
                 setX, xpos, add, mul, mathop, costumeNumber, repeat, changeSize, changeEffect,
-                deleteClone} = b;
+                deleteClone, play} = b;
             const playing = () => eq(v('state'), 'play');
             script(whenFlag(), [
                 hide(),
@@ -124,8 +126,11 @@ const build = project => {
             script(whenClicked(), [
                 ifThen(and(playing(), eq(v('popped'), 0)), [
                     setv('popped', 1),
-                    ifElse(eq(costumeNumber(), 2), [chg('Time', -3)], [chg('Score', 1)]),
+                    ifElse(eq(costumeNumber(), 2), [chg('Time', -3), play('ouch')], [chg('Score', 1), play('pop')]),
                     repeat(4, [changeSize(18), changeEffect('ghost', 25)]),
+                    // Wait out of sight so the sound can finish.
+                    hide(),
+                    wait(0.3),
                     deleteClone()
                 ])
             ]);

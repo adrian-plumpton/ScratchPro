@@ -2,6 +2,7 @@
 // Collect sparks for extra time.
 
 const {svgDoc, seeded} = require('./builder');
+const {SFX} = require('./sfx');
 
 const C = {
     night: '#0f1330',
@@ -103,8 +104,9 @@ const build = project => {
         variables: {Sparks: 0, Time: 60, Best: 0, state: 'play'},
         lists: {'spot x': SPOTS.map(s => s[0]), 'spot y': SPOTS.map(s => s[1])},
         broadcasts: ['game over'],
+        sounds: [['time up', SFX.timeUp()]],
         scripts: ({script, whenFlag, setv, chg, repeatUntil, wait, lt, gt, v, broadcast, ifThen, ifElse,
-            isSaved, saved, saveAs}) => {
+            isSaved, saved, saveAs, play}) => {
             script(whenFlag(), [
                 // The best score is kept on the device with the Phone extension's save blocks.
                 ifElse(isSaved('best sparks'), [setv('Best', saved('best sparks'))], [setv('Best', 0)]),
@@ -118,6 +120,7 @@ const build = project => {
                     saveAs(v('Sparks'), 'best sparks')
                 ]),
                 setv('state', 'over'),
+                play('time up'),
                 broadcast('game over')
             ]);
         }
@@ -135,12 +138,13 @@ const build = project => {
 
     project.sprite('Spark', {
         costumes: [['Spark', sparkSvg, 14, 14]],
+        sounds: [['collect', SFX.collect()]],
         variables: {spot: 0},
         visible: false,
         scripts: b => {
             const {script, define, whenFlag, whenClone, setv, chg, v, random, lengthOf, item, gotoXY,
                 repeatUntil, not, touching, hide, show, repeat, cloneMyself, setSize, clearEffects, call,
-                forever, turn, ifThen, and, eq, changeSize, changeEffect, vibrate} = b;
+                forever, turn, ifThen, and, eq, changeSize, changeEffect, vibrate, play} = b;
             define('jump to a free spot', false, [
                 setv('spot', random(1, lengthOf('spot x'))),
                 gotoXY(item('spot x', v('spot')), item('spot y', v('spot'))),
@@ -159,6 +163,7 @@ const build = project => {
                     turn(4),
                     ifThen(and(touching('Player'), eq(v('state'), 'play')), [
                         chg('Sparks', 1),
+                        play('collect'),
                         chg('Time', 1),
                         vibrate(25),
                         repeat(5, [changeSize(14), changeEffect('ghost', 20)]),
@@ -208,6 +213,7 @@ const build = project => {
 
     project.sprite('Player', {
         costumes: [['bot', botSvg, 15, 24], ['hitbox', hitboxSvg, 15, 24]],
+        sounds: [['jump', SFX.jump()], ['dash', SFX.dash()], ['hit', SFX.hit()]],
         variables: {
             'vx': 0,
             'vy': 0,
@@ -227,7 +233,7 @@ const build = project => {
             const {script, define, whenFlag, whenReceive, setv, chg, v, add, sub, mul, div, mod, round,
                 join, gt, lt, eq, and, not, key, touching, ypos, ifThen, ifElse, forever, repeatUntil,
                 changeX, changeY, gotoXY, point, rotationStyle, wear, toFront, setEffect, clearEffects,
-                say, sayFor, call, or, vibrate, whenSwiped} = b;
+                say, sayFor, call, or, vibrate, whenSwiped, play} = b;
             const playing = () => eq(v('state'), 'play');
             define('step', true, [
                 wear('hitbox'),
@@ -244,6 +250,7 @@ const build = project => {
                 // A sideways swipe dashes once; a swipe up counts as holding jump for a few frames.
                 ifThen(and(and(or(key('x'), gt(v('swipe dash'), 0)), eq(v('dash wait'), 0)), playing()), [
                     setv('dash', 6),
+                    play('dash'),
                     setv('dash wait', 30)
                 ]),
                 setv('swipe dash', 0),
@@ -280,6 +287,7 @@ const build = project => {
                 ]),
                 ifThen(and(and(or(key('space'), gt(v('swipe jump'), 0)), gt(v('ground'), 0)), playing()), [
                     setv('vy', 13),
+                    play('jump'),
                     setv('ground', 0)
                 ]),
                 ifThen(gt(v('swipe jump'), 0), [chg('swipe jump', -1)]),
@@ -292,6 +300,7 @@ const build = project => {
                 ifThen(and(and(touching('Blob'), eq(v('hurt'), 0)), playing()), [
                     setv('hurt', 45),
                     chg('Time', -5),
+                    play('hit'),
                     vibrate(150),
                     setv('vy', 9),
                     setv('vx', mul(-7, v('face')))

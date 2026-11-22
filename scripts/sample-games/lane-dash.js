@@ -1,6 +1,7 @@
 // Lane Dash: a racer seen from above. Joystick to steer, hold Space to boost. Dodge the traffic.
 
 const {svgDoc} = require('./builder');
+const {SFX} = require('./sfx');
 
 const C = {
     grass: '#16302b',
@@ -155,12 +156,13 @@ const build = project => {
 
     project.sprite('Player', {
         costumes: [['car', playerSvg, 18, 30]],
-        variables: {steer: 0},
+        sounds: [['start', SFX.start()], ['boost', SFX.boost()], ['crash', SFX.crash()]],
+        variables: {steer: 0, boosting: 0},
         y: -125,
         scripts: b => {
             const {script, whenFlag, whenReceive, gotoXY, point, toFront, clearEffects, setv, chg, v, add, sub,
                 mul, div, round, key, forever, ifThen, ifElse, eq, gt, lt, changeX, setX, xpos, sayFor, say,
-                join, repeat, turn, stopOtherScripts} = b;
+                join, repeat, turn, stopOtherScripts, play} = b;
             const playing = () => eq(v('state'), 'play');
             script(whenFlag(), [
                 gotoXY(0, -125),
@@ -168,6 +170,8 @@ const build = project => {
                 clearEffects(),
                 toFront(),
                 setv('steer', 0),
+                setv('boosting', 0),
+                play('start'),
                 forever([
                     ifThen(playing(), [
                         // The joystick presses the arrow keys.
@@ -177,7 +181,14 @@ const build = project => {
                         ifThen(lt(xpos(), -160), [setX(-160), setv('steer', 0)]),
                         point(add(90, mul(v('steer'), 2))),
                         // Hold Space to boost: faster, more points, more danger.
-                        ifElse(key('space'), [setv('speed', mul(v('base'), 1.7))], [setv('speed', v('base'))]),
+                        ifElse(key('space'), [
+                            ifThen(eq(v('boosting'), 0), [play('boost')]),
+                            setv('boosting', 1),
+                            setv('speed', mul(v('base'), 1.7))
+                        ], [
+                            setv('boosting', 0),
+                            setv('speed', v('base'))
+                        ]),
                         chg('distance', div(v('speed'), 12)),
                         setv('Score', round(v('distance')))
                     ])
@@ -190,6 +201,7 @@ const build = project => {
                 ifThen(playing(), [
                     setv('state', 'over'),
                     stopOtherScripts(),
+                    play('crash'),
                     ifThen(gt(v('Score'), v('Best')), [setv('Best', v('Score'))]),
                     repeat(12, [turn(30)]),
                     point(90),

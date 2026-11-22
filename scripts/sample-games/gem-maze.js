@@ -1,6 +1,7 @@
 // Gem Maze: a top-down maze. Joystick only: find all six gems while a ghost drifts through the walls.
 
 const {svgDoc} = require('./builder');
+const {SFX} = require('./sfx');
 
 const C = {
     floor: '#1e1b2e',
@@ -121,12 +122,13 @@ const build = project => {
 
     project.sprite('Gem', {
         costumes: [['gem', gemSvg, 12, 12]],
+        sounds: [['gem', SFX.gem()]],
         variables: {number: 0},
         visible: false,
         scripts: b => {
             const {script, whenFlag, whenClone, hide, show, setv, chg, v, repeat, lengthOf, cloneMyself,
                 gotoXY, item, setSize, clearEffects, waitUntil, touching, changeSize, changeEffect,
-                deleteClone} = b;
+                deleteClone, play, wait} = b;
             script(whenFlag(), [
                 hide(),
                 setv('number', 0),
@@ -139,7 +141,10 @@ const build = project => {
                 show(),
                 waitUntil(touching('Hero')),
                 chg('Gems', 1),
+                play('gem'),
                 repeat(5, [changeSize(20), changeEffect('ghost', 20)]),
+                hide(),
+                wait(0.3),
                 deleteClone()
             ]);
         }
@@ -177,6 +182,7 @@ const build = project => {
     const heroY = cellY(START[1]);
     project.sprite('Hero', {
         costumes: [['hero', heroSvg, 12, 12]],
+        sounds: [['boo', SFX.boo()], ['win', SFX.win()]],
         variables: {dx: 0, dy: 0, lane: 0},
         x: heroX,
         y: heroY,
@@ -184,7 +190,7 @@ const build = project => {
         scripts: b => {
             const {script, define, whenFlag, whenReceive, gotoXY, point, rotationStyle, toFront, setv, v, sub,
                 add, mul, div, round, key, forever, call, ifThen, eq, not, and, touching, changeX, changeY,
-                xpos, ypos, setX, setY, sayFor, say, join} = b;
+                xpos, ypos, setX, setY, sayFor, say, join, play} = b;
             const SPEED = 3;
             define('step', true, [
                 ifThen(eq(v('state'), 'play'), [
@@ -222,9 +228,11 @@ const build = project => {
             ]);
             script(whenReceive('caught'), [
                 gotoXY(heroX, heroY),
+                play('boo'),
                 sayFor('Boo! Back to the start.', 1.5)
             ]);
             script(whenReceive('all found'), [
+                play('win'),
                 say(join('You found every gem in ', join(v('Time'), ' seconds! Press the green flag to go again.')))
             ]);
         }
