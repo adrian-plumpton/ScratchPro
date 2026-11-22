@@ -53,6 +53,10 @@ class SPTouchControls extends React.Component {
             'handleVisibilityChange',
             'handleBrowserFullscreenChange',
             'handleProjectLoaded',
+            'handlePause',
+            'handleResume',
+            'handleRestart',
+            'handleExit',
             'rescan'
         ]);
         this.isTouch = isTouchDevice();
@@ -61,7 +65,8 @@ class SPTouchControls extends React.Component {
         this.debouncedRescan = debounce(this.rescan, 400);
         this.state = {
             config: EMPTY_CONFIG,
-            hidden: !touchState.controlsVisible()
+            hidden: !touchState.controlsVisible(),
+            paused: false
         };
     }
     componentDidMount () {
@@ -82,6 +87,8 @@ class SPTouchControls extends React.Component {
         if (prevProps.isFullScreen !== this.props.isFullScreen || prevProps.isEmbedded !== this.props.isEmbedded) {
             this.syncImmersive(prevProps.isFullScreen);
         }
+        // Leaving full screen however it happens never leaves the game frozen.
+        if (prevProps.isFullScreen && !this.props.isFullScreen && this.state.paused) this.handleResume();
     }
     componentWillUnmount () {
         if (!this.isTouch) return;
@@ -96,6 +103,54 @@ class SPTouchControls extends React.Component {
         document.removeEventListener('webkitfullscreenchange', this.handleBrowserFullscreenChange);
         this.releaseAllKeys();
         setImmersive(false);
+    }
+    // Sparkjam: the pause menu (design P4). Pausing stops the frame loop and the project timer,
+    // so timers and waits carry on where they left off.
+    handlePause () {
+        if (this.state.paused) return;
+        const runtime = this.props.vm.runtime;
+        this.setState({paused: true});
+        this.pausedAt = Date.now();
+        this.releaseAllKeys();
+        runtime.frameLoop.stop();
+        if (!runtime.ioDevices.clock._paused) runtime.ioDevices.clock.pause();
+        this.setAudio(false);
+    }
+    handleResume () {
+        if (!this.state.paused) return;
+        const runtime = this.props.vm.runtime;
+        this.setState({paused: false});
+        // Push running waits and timers forward by the time spent paused, like TurboWarp's debugger.
+        const pausedFor = Date.now() - this.pausedAt;
+        for (const thread of runtime.threads) {
+            const frame = thread.peekStackFrame && thread.peekStackFrame();
+            [
+                thread.timer,
+                thread.compatibilityStackFrame && thread.compatibilityStackFrame.timer,
+                frame && frame.executionContext && frame.executionContext.timer
+            ].forEach(timer => {
+                if (timer && typeof timer.startTime === 'number') timer.startTime += pausedFor;
+            });
+        }
+        runtime.ioDevices.clock.resume();
+        runtime.frameLoop.start();
+        this.setAudio(true);
+    }
+    setAudio (on) {
+        try {
+            const context = this.props.vm.runtime.audioEngine.audioContext;
+            Promise.resolve(on ? context.resume() : context.suspend()).catch(() => {});
+        } catch (e) {
+            // No audio on this device; nothing to pause.
+        }
+    }
+    handleRestart () {
+        this.handleResume();
+        this.props.vm.greenFlag();
+    }
+    handleExit () {
+        this.handleResume();
+        this.props.onSetFullScreen(false);
     }
     syncImmersive (wasFullScreen) {
         const {isFullScreen, isEmbedded} = this.props;
@@ -206,6 +261,11 @@ class SPTouchControls extends React.Component {
                 <TouchControls
                     layout="overlay"
                     sideSpace={(window.innerWidth - stageWidth) / 2}
+                    paused={this.state.paused}
+                    onPause={this.handlePause}
+                    onResume={this.handleResume}
+                    onRestart={this.handleRestart}
+                    onExit={isEmbedded ? null : this.handleExit}
                     {...common}
                 />,
                 document.body
@@ -242,7 +302,8 @@ SPTouchControls.propTypes = {
         removeListener: PropTypes.func,
         postIOData: PropTypes.func,
         start: PropTypes.func,
-        greenFlag: PropTypes.func
+        greenFlag: PropTypes.func,
+        runtime: PropTypes.object
     }).isRequired
 };
 

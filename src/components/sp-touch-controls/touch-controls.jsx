@@ -288,10 +288,17 @@ ToggleIcon.propTypes = {
  * @returns {React.ReactElement} The controls.
  */
 const TouchControls = props => {
-    const {config, layout, showPlayButton, sideSpace, onKey, onJoystick, onPlay, onToggleHidden, hidden} = props;
+    const {config, layout, showPlayButton, sideSpace, onKey, onJoystick, onPlay, onToggleHidden, hidden,
+        paused, onPause, onResume, onRestart, onExit} = props;
     const hasControls = !!config.joystick || config.buttons.length > 0;
     const showControls = hasControls && !hidden;
     const toggleLabel = hidden ? 'Show touch controls' : 'Hide touch controls';
+    // Sparkjam: with its own exit and pause buttons, the overlay replaces TurboWarp's stage header.
+    const ownHeader = layout === 'overlay' && !!(onExit || onPause);
+    React.useEffect(() => {
+        document.body.classList.toggle('sj-own-header', ownHeader);
+        return () => document.body.classList.remove('sj-own-header');
+    }, [ownHeader]);
 
     const joystick = config.joystick ? (
         <Joystick
@@ -356,9 +363,69 @@ const TouchControls = props => {
             className={classNames(styles.root, styles.overlay)}
             onContextMenu={preventDefault}
         >
-            {showControls && joystick && <div className={styles.left}>{joystick}</div>}
-            {showControls && buttons && <div className={styles.right}>{buttons}</div>}
-            {hasControls && (
+            {/* Sparkjam: exit and pause stay small in the top corners (design P4). */}
+            {onExit || onPause ? (
+                <div className={styles.topBar}>
+                    {onExit ? (
+                        <button
+                            className={styles.topButton}
+                            onClick={onExit}
+                            type="button"
+                            aria-label="Exit full screen"
+                            title="Exit full screen"
+                        >{'✕'}</button>
+                    ) : null}
+                    {onPause ? (
+                        <button
+                            className={classNames(styles.topButton, styles.pauseButton)}
+                            onClick={onPause}
+                            type="button"
+                            aria-label="Pause"
+                            title="Pause"
+                        >{'❙❙'}</button>
+                    ) : null}
+                </div>
+            ) : null}
+            {paused ? (
+                <div
+                    className={styles.pauseScreen}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Paused"
+                >
+                    <div className={styles.pauseBox}>
+                        <span className={styles.pauseWho}>{'PAUSED'}</span>
+                        <button
+                            className={styles.pauseOption}
+                            onClick={onResume}
+                            type="button"
+                            autoFocus
+                        >{'▶ RESUME'}</button>
+                        <button
+                            className={styles.pauseOption}
+                            onClick={onRestart}
+                            type="button"
+                        >{'RESTART'}</button>
+                        {hasControls ? (
+                            <button
+                                className={styles.pauseOption}
+                                onClick={onToggleHidden}
+                                type="button"
+                            >{hidden ? 'SHOW CONTROLS' : 'HIDE CONTROLS'}</button>
+                        ) : null}
+                        {onExit ? (
+                            <button
+                                className={styles.pauseOption}
+                                onClick={onExit}
+                                type="button"
+                            >{'EXIT FULL SCREEN'}</button>
+                        ) : null}
+                    </div>
+                </div>
+            ) : null}
+            {!paused && showControls && joystick && <div className={styles.left}>{joystick}</div>}
+            {!paused && showControls && buttons && <div className={styles.right}>{buttons}</div>}
+            {!paused && hasControls && (
                 <button
                     className={styles.overlayToggle}
                     onClick={onToggleHidden}
@@ -385,7 +452,12 @@ TouchControls.propTypes = {
     onJoystick: PropTypes.func.isRequired,
     onKey: PropTypes.func.isRequired,
     onPlay: PropTypes.func,
-    onToggleHidden: PropTypes.func.isRequired
+    onToggleHidden: PropTypes.func.isRequired,
+    paused: PropTypes.bool,
+    onPause: PropTypes.func,
+    onResume: PropTypes.func,
+    onRestart: PropTypes.func,
+    onExit: PropTypes.func
 };
 
 export default TouchControls;
