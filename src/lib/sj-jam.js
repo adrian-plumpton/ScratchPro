@@ -21,6 +21,10 @@ const STAGE = '__stage__';
 const SNAPSHOT_WAIT = 8000;
 const KEEPER_SAVE_EVERY = 20000;
 const GAME_SYNC_DELAY = 1000;
+// Live drags: how often positions are sent while something is being dragged, and how long a
+// drag shown from someone else lasts if its end never arrives.
+const DRAG_EVERY = 60;
+const GHOST_TIMEOUT = 3000;
 
 let state = {status: 'idle', code: null, jam: null, others: [], self: null, error: null, activity: []};
 const listeners = new Set();
@@ -50,13 +54,14 @@ const isJamLoading = () => jamLoading;
  * @param {object} vm The VM.
  * @returns {Promise<Blob>} The game.
  */
-const saveForJam = async vm => {
+const saveForJam = vm => {
     const toJSON = vm.toJSON;
     vm.toJSON = function (targetId, options) {
         return toJSON.call(this, targetId, {...options, allowOptimization: false});
     };
     try {
-        return await vm.saveProjectSb3();
+        // The game is turned into JSON straight away; only the zipping happens later.
+        return vm.saveProjectSb3();
     } finally {
         vm.toJSON = toJSON;
     }
@@ -108,9 +113,13 @@ class JamSession {
         this.gameTimer = null;
         this.keeperTimer = null;
         this.unsubscribers = [];
+        this.dragLoop = 0;
+        this.localDrag = null;
+        this.lastDragSent = 0;
+        this.ghosts = new Map();
         [
             'handleWorkspaceEvent', 'handleWorkspaceUpdate', 'handleProjectChanged', 'handleRoomEvent',
-            'handleOthers', 'handleTargetsUpdate', 'keeperSave'
+            'handleOthers', 'handleTargetsUpdate', 'keeperSave', 'watchDrags'
         ].forEach(name => {
             this[name] = this[name].bind(this);
         });
@@ -170,6 +179,7 @@ class JamSession {
         this.buffer = [];
         this.updatePresence();
         this.keeperTimer = setInterval(this.keeperSave, KEEPER_SAVE_EVERY);
+        this.dragLoop = requestAnimationFrame(this.watchDrags);
         setState({status: 'live'});
     }
 
@@ -302,6 +312,7 @@ class JamSession {
         setTimeout(() => setTimeout(() => {
             this.suppressWorkspace = false;
         }, 0), 0);
+        [...this.ghosts.keys()].forEach(key => this.removeGhost(key));
         this.attachWorkspace();
         this.updatePresence();
     }
@@ -388,6 +399,26 @@ class JamSession {
             if (event.type === 'block' || event.type === 'props') this.buffer.push(event);
             return;
         }
+        if (event.type === 'drag') {
+            this.showGhost(event, (user && user.info && user.info.color) || '#c9a7ff', connectionId);
+            return;
+        }
+        if (event.type === 'drag-end') {
+            this.removeGhost(connectionId);
+            return;
+        }
+        if (event.type === 'sprite-drag') {
+            const sprite = this.vm.runtime.getSpriteTargetByName(event.name);
+            if (sprite && !sprite.dragging) {
+                this.applyingRemote = true;
+                try {
+                    sprite.setXY(event.x, event.y);
+                } finally {
+                    this.applyingRemote = false;
+                }
+            }
+            return;
+        }
         if (event.type === 'reload') {
             addActivity(`${name} changed the game`);
             this.loadSnapshot().catch(e => log.error('Jam: could not load the game', e));
@@ -467,6 +498,81 @@ class JamSession {
         // briefly undo changes (eg. bring back a block that was just deleted).
     }
 
+    // Live drags. Every frame, look for a block being dragged in my code area or a sprite being dragged
+    // on my stage, and send where it is (a few times a second).
+    watchDrags () {
+        if (!this.room) return;
+        this.dragLoop = requestAnimationFrame(this.watchDrags);
+        const now = Date.now();
+        const drag = this.currentBlockDrag();
+        if (drag) {
+            this.localDrag = drag.blockId;
+            if (now - this.lastDragSent >= DRAG_EVERY) {
+                this.lastDragSent = now;
+                this.room.broadcastEvent({type: 'drag', target: targetName(this.vm.editingTarget), ...drag});
+            }
+        } else if (this.localDrag) {
+            this.localDrag = null;
+            this.room.broadcastEvent({type: 'drag-end'});
+        }
+        if (now - this.lastDragSent >= DRAG_EVERY) {
+            const sprite = this.vm.runtime.targets.find(t => t.isOriginal && !t.isStage && t.dragging);
+            if (sprite) {
+                this.lastDragSent = now;
+                this.room.broadcastEvent({type: 'sprite-drag', name: sprite.getName(), x: sprite.x, y: sprite.y});
+            }
+        }
+        // Forget drags whose end never arrived.
+        this.ghosts.forEach((ghost, key) => {
+            if (now - ghost.at > GHOST_TIMEOUT) this.removeGhost(key);
+        });
+    }
+
+    currentBlockDrag () {
+        const gesture = this.workspace && this.workspace.currentGesture_;
+        const dragger = gesture && gesture.isDraggingBlock_ && gesture.blockDragger_;
+        const block = dragger && dragger.draggingBlock_;
+        if (!block || !dragger.startXY_ || !gesture.currentDragDeltaXY_) return null;
+        const delta = dragger.pixelsToWorkspaceUnits_(gesture.currentDragDeltaXY_);
+        return {
+            blockId: block.id,
+            x: Math.round(dragger.startXY_.x + delta.x),
+            y: Math.round(dragger.startXY_.y + delta.y)
+        };
+    }
+
+    // Someone else is dragging blocks: show a see-through copy of them, outlined in their colour, that
+    // follows their drag. It goes when they drop (the real move arrives as a normal block edit).
+    showGhost (event, color, key) {
+        const editing = this.vm.editingTarget ? targetName(this.vm.editingTarget) : null;
+        const block = this.workspace && event.target === editing && this.workspace.getBlockById(event.blockId);
+        if (!block || !block.getSvgRoot()) {
+            this.removeGhost(key);
+            return;
+        }
+        let ghost = this.ghosts.get(key);
+        if (!ghost || ghost.blockId !== event.blockId) {
+            this.removeGhost(key);
+            const svg = block.getSvgRoot().cloneNode(true);
+            svg.removeAttribute('id');
+            svg.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+            svg.style.opacity = '0.6';
+            svg.style.pointerEvents = 'none';
+            svg.style.filter = `drop-shadow(0 0 2px ${color}) drop-shadow(0 0 2px ${color})`;
+            this.workspace.getCanvas().appendChild(svg);
+            ghost = {svg, blockId: event.blockId};
+            this.ghosts.set(key, ghost);
+        }
+        ghost.at = Date.now();
+        ghost.svg.setAttribute('transform', `translate(${event.x},${event.y})`);
+    }
+
+    removeGhost (key) {
+        const ghost = this.ghosts.get(key);
+        if (ghost && ghost.svg.parentNode) ghost.svg.parentNode.removeChild(ghost.svg);
+        this.ghosts.delete(key);
+    }
+
     // Presence: where I am. tab is set by setJamTab; cursor by setJamCursor.
     updatePresence (extra) {
         if (!this.room) return;
@@ -479,6 +585,8 @@ class JamSession {
     }
 
     stop () {
+        cancelAnimationFrame(this.dragLoop);
+        [...this.ghosts.keys()].forEach(key => this.removeGhost(key));
         clearTimeout(this.gameTimer);
         clearInterval(this.keeperTimer);
         this.vm.off('workspaceUpdate', this.handleWorkspaceUpdate);

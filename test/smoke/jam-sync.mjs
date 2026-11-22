@@ -23,6 +23,8 @@ const fakeLiveblocks = name => {
         return btoa(text);
     };
     window.__sjJamTest = {
+        endJam: () => Promise.resolve(),
+        removeFromJam: () => Promise.resolve(),
         saveSnapshot: async (code, blob) => {
             localStorage.setItem(`jam-${code}`, toBase64(await blob.arrayBuffer()));
         },
@@ -174,6 +176,43 @@ await b.waitForTimeout(1500);
 check(await b.evaluate(id => !!ScratchBlocks.getMainWorkspace().getBlockById(id), hiddenId),
     'Edits to a sprite you aren\'t looking at are there when you open it');
 
+// A drags a script with the mouse: while dragging, B sees a see-through copy following it.
+const dragged = await a.evaluate(() => {
+    const top = ScratchBlocks.getMainWorkspace().getTopBlocks(true)
+        .find(b => b.type === 'event_whenflagclicked');
+    const box = top.getSvgRoot().getBoundingClientRect();
+    return {id: top.id, x: box.left + 20, y: box.top + 15};
+});
+await a.bringToFront();
+await a.mouse.move(dragged.x, dragged.y);
+await a.mouse.down();
+for (let i = 1; i <= 10; i++) await a.mouse.move(dragged.x + (i * 12), dragged.y + (i * 6));
+await a.waitForTimeout(400);
+check(await b.evaluate(() => document.querySelectorAll('.blocklyBlockCanvas > g[style*="opacity: 0.6"]').length) === 1,
+    'B sees A dragging blocks, live');
+await a.mouse.up();
+await a.waitForTimeout(1500);
+check(await b.evaluate(() => document.querySelectorAll('.blocklyBlockCanvas > g[style*="opacity: 0.6"]').length) === 0,
+    'and the copy goes when A drops them');
+const [aPos, bPos] = await Promise.all([a, b].map(page => page.evaluate(id => {
+    const block = vm.runtime.getSpriteTargetByName('Player').blocks.getBlock(id);
+    return `${Math.round(block.x)},${Math.round(block.y)}`;
+}, dragged.id)));
+check(aPos === bPos, `The dropped script lands in the same place for both (${aPos} and ${bPos})`);
+
+// A drags a sprite on the stage: B sees it move while it's still being dragged.
+await a.evaluate(() => {
+    const blob = vm.runtime.getSpriteTargetByName('Blob');
+    blob.dragging = true;
+    blob.setXY(-120, 60, true); // Forced, as the stage does while dragging.
+});
+await a.waitForTimeout(500);
+check(await b.evaluate(() => Math.round(vm.runtime.getSpriteTargetByName('Blob').x)) === -120,
+    'B sees a sprite being dragged, live');
+await a.evaluate(() => {
+    vm.runtime.getSpriteTargetByName('Blob').dragging = false;
+});
+
 // A moves the Blob sprite; B's Blob moves.
 await a.evaluate(() => {
     vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Blob').id);
@@ -189,6 +228,15 @@ await b.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Slim
     .catch(() => {});
 check(await b.evaluate(() => vm.runtime.targets.some(t => t.getName() === 'Slime')),
     'Bigger changes (renaming a sprite) reach the other editor');
+
+// A ends the jam with the END button; B is told and keeps their copy.
+await a.bringToFront();
+await a.getByRole('button', {name: 'END', exact: true}).click();
+await a.getByRole('button', {name: 'YES, END IT'}).click();
+await b.waitForFunction(() => window.__sjJam.getJamState().status === 'ended', null, {timeout: 10000}).catch(() => {});
+check(await b.evaluate(() => window.__sjJam.getJamState().status) === 'ended', 'Ending the jam tells everyone');
+check(await b.getByText('ended the jam').isVisible(), 'and B sees who ended it');
+check(await a.evaluate(() => window.__sjJam.getJamState().status) === 'idle', 'and A is back to making on their own');
 
 check(errors.length === 0, `No page errors${errors.length ? `: ${errors.slice(0, 3).join(' | ')}` : ''}`);
 await browser.close();

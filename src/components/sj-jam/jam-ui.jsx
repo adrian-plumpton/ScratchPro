@@ -19,6 +19,12 @@ import {links} from '../../lib/sj-links';
 import {getIsShowingProject} from '../../reducers/project-state';
 import styles from './jam-ui.css';
 
+// Local testing only (see test/smoke/jam-sync.mjs): a test can stand in for the jams API.
+const api = name => {
+    const hooks = location.hostname === 'localhost' && window.__sjJamTest;
+    return (hooks && hooks[name]) || {endJam, removeFromJam}[name];
+};
+
 const useJam = () => {
     const [jam, setJam] = useState(getJamState());
     useEffect(() => onJamState(setJam), []);
@@ -210,9 +216,9 @@ const InviteDialog = ({code, onClose}) => {
 InviteDialog.propTypes = {code: PropTypes.string.isRequired, onClose: PropTypes.func.isRequired};
 
 // J4: who's in the jam.
-const PeoplePanel = ({jam, vm, onInvite, onClose}) => {
+const PeoplePanel = ({jam, vm, onInvite, onClose, startConfirm}) => {
     const [busy, setBusy] = useState('');
-    const [confirmEnd, setConfirmEnd] = useState(false);
+    const [confirmEnd, setConfirmEnd] = useState(!!startConfirm);
     const isHost = jam.jam && jam.jam.isHost;
     const follow = person => {
         if (!person.target) return;
@@ -224,7 +230,7 @@ const PeoplePanel = ({jam, vm, onInvite, onClose}) => {
     const remove = async person => {
         setBusy(person.connectionId);
         try {
-            await removeFromJam(jam.code, person.id);
+            await api('removeFromJam')(jam.code, person.id);
             broadcastJam({type: 'kick', userId: person.id});
         } catch (e) {
             window.alert(e.message); // eslint-disable-line no-alert
@@ -234,7 +240,7 @@ const PeoplePanel = ({jam, vm, onInvite, onClose}) => {
     const end = async () => {
         setBusy('end');
         try {
-            await endJam(jam.code);
+            await api('endJam')(jam.code);
             broadcastJam({type: 'ended'});
             leaveJam();
             setJamParam(null);
@@ -344,6 +350,7 @@ const PeoplePanel = ({jam, vm, onInvite, onClose}) => {
     );
 };
 PeoplePanel.propTypes = {
+    startConfirm: PropTypes.bool,
     jam: PropTypes.object.isRequired,
     vm: PropTypes.object.isRequired,
     onInvite: PropTypes.func.isRequired,
@@ -359,6 +366,7 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     useAccount();
     const [invite, setInvite] = useState(false);
     const [people, setPeople] = useState(false);
+    const [ending, setEnding] = useState(false);
     const [starting, setStarting] = useState(false);
     const [problem, setProblem] = useState('');
     const autoDone = useRef(false);
@@ -429,7 +437,10 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
                 >{`JAM-${jam.code}`}</button>
                 <button
                     className={styles.avatars}
-                    onClick={() => setPeople(!people)}
+                    onClick={() => {
+                        setEnding(false);
+                        setPeople(!people);
+                    }}
                     aria-label={`People in this jam: ${everyone.length}`}
                     aria-expanded={people}
                 >
@@ -447,6 +458,19 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
                     className={styles.invite}
                     onClick={() => setInvite(true)}
                 >{'INVITE'}</button>
+                <button
+                    className={styles.end}
+                    onClick={() => {
+                        if (jam.jam && jam.jam.isHost) {
+                            setEnding(true);
+                            setPeople(true);
+                        } else {
+                            leaveJam();
+                            setJamParam(null);
+                        }
+                    }}
+                    title={jam.jam && jam.jam.isHost ? 'End the jam for everyone' : 'Leave the jam'}
+                >{jam.jam && jam.jam.isHost ? 'END' : 'LEAVE'}</button>
             </React.Fragment>
         );
     } else {
@@ -480,13 +504,18 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
             ) : null}
             {people && live ? (
                 <PeoplePanel
+                    key={ending ? 'ending' : 'people'}
+                    startConfirm={ending}
                     jam={jam}
                     vm={vm}
                     onInvite={() => {
                         setPeople(false);
                         setInvite(true);
                     }}
-                    onClose={() => setPeople(false)}
+                    onClose={() => {
+                        setPeople(false);
+                        setEnding(false);
+                    }}
                 />
             ) : null}
             {ended || problem ? (

@@ -425,3 +425,17 @@
         display: none;
     }
 }
+
+.end {
+    padding: 7px 9px;
+    border: 2px solid #fff;
+    background: none;
+    color: #fff;
+    font: 400 9px var(--px);
+    white-space: nowrap;
+}
+
+.end:hover {
+    border-color: #ff6fa8;
+    color: #ff6fa8;
+}
