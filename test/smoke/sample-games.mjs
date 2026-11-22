@@ -94,8 +94,13 @@ const GAMES = [
                     t.currentCostume === 0 && t.y > -60 && t.y < 120);
                 return bubbles.length ? {x: bubbles[0].x, y: bubbles[0].y + 4} : null;
             });
-            check(await findBubble() !== null || (await page.waitForTimeout(1000), await findBubble() !== null),
-                'Bubble Pop: bubbles float up');
+            // Bubbles appear at random, so give one up to 5 seconds to drift into view.
+            let seen = await findBubble() !== null;
+            for (let i = 0; i < 10 && !seen; i++) {
+                await page.waitForTimeout(500);
+                seen = await findBubble() !== null;
+            }
+            check(seen, 'Bubble Pop: bubbles float up');
             const box = await page.locator('canvas').first().boundingBox();
             for (let attempt = 0; attempt < 5 && await stageVar('Score') < 1; attempt++) {
                 const target = await findBubble();
