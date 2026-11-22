@@ -560,7 +560,15 @@ class JamSession {
             svg.style.pointerEvents = 'none';
             svg.style.filter = `drop-shadow(0 0 2px ${color}) drop-shadow(0 0 2px ${color})`;
             this.workspace.getCanvas().appendChild(svg);
-            ghost = {svg, blockId: event.blockId};
+            // Lock the stack while they drag it, so two people can't move the same blocks at once.
+            const locked = block.getDescendants(false)
+                .filter(b => b.isMovable() || b.isEditable())
+                .map(b => ({block: b, movable: b.isMovable(), editable: b.isEditable()}));
+            locked.forEach(({block: b}) => {
+                b.setMovable(false);
+                b.setEditable(false);
+            });
+            ghost = {svg, blockId: event.blockId, locked};
             this.ghosts.set(key, ghost);
         }
         ghost.at = Date.now();
@@ -569,7 +577,14 @@ class JamSession {
 
     removeGhost (key) {
         const ghost = this.ghosts.get(key);
-        if (ghost && ghost.svg.parentNode) ghost.svg.parentNode.removeChild(ghost.svg);
+        if (!ghost) return;
+        if (ghost.svg.parentNode) ghost.svg.parentNode.removeChild(ghost.svg);
+        ghost.locked.forEach(({block, movable, editable}) => {
+            if (block.workspace) {
+                block.setMovable(movable);
+                block.setEditable(editable);
+            }
+        });
         this.ghosts.delete(key);
     }
 

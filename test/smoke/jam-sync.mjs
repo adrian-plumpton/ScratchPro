@@ -190,10 +190,14 @@ for (let i = 1; i <= 10; i++) await a.mouse.move(dragged.x + (i * 12), dragged.y
 await a.waitForTimeout(400);
 check(await b.evaluate(() => document.querySelectorAll('.blocklyBlockCanvas > g[style*="opacity: 0.6"]').length) === 1,
     'B sees A dragging blocks, live');
+check(await b.evaluate(id => !ScratchBlocks.getMainWorkspace().getBlockById(id).isMovable(), dragged.id),
+    'and can\'t grab the same blocks while A drags them');
 await a.mouse.up();
 await a.waitForTimeout(1500);
 check(await b.evaluate(() => document.querySelectorAll('.blocklyBlockCanvas > g[style*="opacity: 0.6"]').length) === 0,
     'and the copy goes when A drops them');
+check(await b.evaluate(id => ScratchBlocks.getMainWorkspace().getBlockById(id).isMovable(), dragged.id),
+    'and B can move them again once A drops them');
 const [aPos, bPos] = await Promise.all([a, b].map(page => page.evaluate(id => {
     const block = vm.runtime.getSpriteTargetByName('Player').blocks.getBlock(id);
     return `${Math.round(block.x)},${Math.round(block.y)}`;
