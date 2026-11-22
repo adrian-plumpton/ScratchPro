@@ -150,6 +150,7 @@ module.exports = [
             'player': './src/playground/player.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
+            'play': './src/playground/play.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
             'credits': './src/playground/credits/credits.jsx'
         },
@@ -213,6 +214,14 @@ module.exports = [
                 template: 'src/playground/embed.ejs',
                 filename: 'embed.html',
                 title: `Embedded Project - ${APP_NAME}`,
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                // ScratchPro: a game on its own, installable to the home screen
+                chunks: ['play'],
+                template: 'src/playground/play.ejs',
+                filename: 'play.html',
+                title: 'Spark Hop',
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({

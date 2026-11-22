@@ -18,6 +18,9 @@ const obscuredShadow = name => {
     return [4, '0'];
 };
 
+// The Phone extension (static/extensions/sptouch.js): swipes, vibration and saved values.
+const PHONE = 'sptouch';
+
 const svgDoc = (w, h, body) =>
     `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
 
@@ -61,8 +64,10 @@ const createProject = () => {
         return [3, id, obscuredShadow(name)];
     };
 
+    const usedExtensions = new Set();
     const mk = (opcode, {inputs = {}, fields = {}, shadow = false, mutation} = {}) => {
         const id = nextId('b');
+        if (opcode.startsWith(`${PHONE}_`)) usedExtensions.add(PHONE);
         const block = {opcode, next: null, parent: null, inputs: {}, fields, shadow, topLevel: false};
         if (mutation) block.mutation = mutation;
         blocks[id] = block;
@@ -208,6 +213,13 @@ const createProject = () => {
         whenReceive: name => mk('event_whenbroadcastreceived', {
             fields: {BROADCAST_OPTION: [name, broadcasts[name]]}
         }),
+
+        // Phone blocks
+        whenSwiped: direction => mk(`${PHONE}_whenSwiped`, {fields: {DIRECTION: [direction, null]}}),
+        vibrate: ms => mk(`${PHONE}_vibrate`, {inputs: {MS: ms}}),
+        saveAs: (value, name) => mk(`${PHONE}_save`, {inputs: {VALUE: value, NAME: name}}),
+        saved: name => R(mk(`${PHONE}_load`, {inputs: {NAME: name}})),
+        isSaved: name => Bool(mk(`${PHONE}_isSaved`, {inputs: {NAME: name}})),
 
         // Custom blocks with no inputs
         call: (proccode, warp = false) => mk('procedures_call', {mutation: {
@@ -364,7 +376,11 @@ const createProject = () => {
         const project = {
             targets,
             monitors,
-            extensions: [],
+            extensions: [...usedExtensions],
+            // Loaded from whichever site is running the game (see tw-security-manager).
+            extensionURLs: Object.fromEntries([...usedExtensions].map(id => [
+                id, `https://scratchpro-app.netlify.app/extensions/${id}.js`
+            ])),
             meta: {semver: '3.0.0', vm: '0.2.0', agent: 'ScratchPro sample builder'}
         };
         const zip = new JSZip();

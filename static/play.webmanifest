@@ -1,0 +1,28 @@
+{
+  "id": "play.html",
+  "name": "Spark Hop",
+  "short_name": "Spark Hop",
+  "description": "A platformer made with ScratchPro. Collect sparks, dodge the blobs.",
+  "start_url": "play.html",
+  "scope": "play",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#1e1b4b",
+  "theme_color": "#1e1b4b",
+  "categories": ["games", "kids"],
+  "icons": [
+    {
+      "src": "images/192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "images/512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    }
+  ]
+}

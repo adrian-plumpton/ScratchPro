@@ -21,3 +21,9 @@
   for = "/sw.js"
   [headers.values]
     Cache-Control = "no-cache"
+
+# The play page's service worker (offline games) too.
+[[headers]]
+  for = "/play-sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"

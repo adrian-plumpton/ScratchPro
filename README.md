@@ -19,21 +19,34 @@ ScratchPro is not affiliated with Scratch, the Scratch Team, the Scratch Foundat
 ## Sample games
 
 The home page has four sample games. **Play** starts one on the stage; **Remix** opens it in the editor.
-The first time the page loads, it opens **Spark Hop**. **File > New** still starts a blank project.
+The first time the editor loads, it opens **Spark Hop**. **File > New** still starts a blank project.
 
 | Game | What it shows |
 |---|---|
-| Spark Hop | Platformer: joystick, plus **Space** (jump) and **X** (dash) buttons |
+| Spark Hop | Platformer: joystick, plus **Space** (jump) and **X** (dash) buttons. On a phone, swipe up to jump and sideways to dash; the phone buzzes on sparks and hits, and the best score is saved on the device |
 | Lane Dash | Racer: joystick, plus a **Space** boost button |
 | Bubble Pop | Tap-only game: no on-screen controls |
 | Gem Maze | Top-down maze: joystick only |
 
 The games are written in code: `scripts/sample-games/` has one file per game, built with a small
-block-writing toolkit (`builder.js`). Rebuild them with `npm run build:samples`, which writes
-`static/samples/<game>.sb3` and a preview picture `<game>.svg`. Card text is in `src/lib/sample-games.js`.
+block-writing toolkit (`builder.js`, which also has the Phone extension's swipe, vibrate and save blocks).
+Rebuild them with `npm run build:samples`, which writes `static/samples/<game>.sb3` and a preview
+picture `<game>.svg`. Card text is in `src/lib/sample-games.js`.
 
 `npm run test:smoke` plays every sample game in a phone-sized browser against a running site
 (`BASE_URL`, default `http://localhost:8601`). CI runs it on every push.
+
+## Installable games (play.html)
+
+`play.html` is Spark Hop on its own: full screen with touch controls and no editor. It has its
+own app manifest (`static/play.webmanifest`), so it can be installed to a phone's home screen
+(the page shows an **Install game** button, or Share > Add to Home Screen on iPhone). Its service
+worker (`static/play-sw.js`, scoped to the play page only) caches the game so it works offline.
+`play.html#123456` plays a Scratch project by ID (needs a connection).
+
+`editor.html?blank` opens the editor with an empty project instead of Spark Hop.
+
+See `docs/ROADMAP.md` for goals and what comes next.
 
 ## Making games on phones and tablets
 
@@ -42,9 +55,10 @@ block-writing toolkit (`builder.js`). Rebuild them with `npm run build:samples`,
   opens when you tap a category.
 - **Tablets:** the full editor is scaled to fit the screen.
 
-## Touch blocks
+## Phone blocks
 
-Add the **Touch** extension (first in the extension library) for blocks made for touch games:
+Add the **Phone** extension (first in the extension library; it used to be called Touch, and
+projects that use it keep working) for blocks made for phone and tablet games:
 
 | Block | What it does |
 |---|---|
@@ -53,13 +67,30 @@ Add the **Touch** extension (first in the extension library) for blocks made for
 | `joystick direction` | Scratch direction (0 up, 90 right, -90 left, 180 down); keeps the last direction when released |
 | `joystick distance` | 0 to 100 |
 | `joystick x`, `joystick y` | -100 to 100 |
+| `when swiped [any/left/right/up/down]` | Runs when a finger (or the mouse) flicks across the stage |
+| `last swipe direction` | left, right, up or down |
 | `finger on stage?`, `number of fingers` | Fingers touching the stage |
 | `finger (1) x`, `finger (1) y` | Stage position of each finger, oldest first |
+| `when phone tilted [left/right/forward/back]` | Runs when the phone is tilted that way (about a third of the way) |
+| `phone tilted [left]?` | True while it is tilted that way; `any way` is also an option |
+| `tilt left/right`, `tilt forward/back` | -100 to 100; forward means the top of the screen tips away from you |
+| `make the way the phone is held now level` | Tilt is measured from how the phone is first held; this resets it |
+| `save (0) as [high score]` | Saves a value on this device, for this game |
+| `saved [high score]` | The saved value, or empty if nothing is saved |
+| `[high score] is saved?`, `delete saved [high score]` | |
 | `[hide/show] touch controls` | Hide the controls, eg. on a title screen |
-| `vibrate for (50) milliseconds` | Haptic feedback, where the device supports it |
-| `using touch screen?` | True on phones and tablets |
+| `vibrate for (50) milliseconds` | Haptic feedback, where the device supports it (not on iPhone) |
+| `using touch screen?`, `screen is portrait?` | |
 
 A project that uses the joystick blocks gets a joystick even if it uses no arrow keys.
+
+- **Tilt** works on phones and tablets. On iPhone and iPad the game asks for permission to use
+  motion the first time the player taps, but only if the game uses tilt blocks.
+- **Saves** stay on the device and belong to one game. A game is recognised by its Scratch
+  project ID, or otherwise by its sprite names, so the same game shares saves in the editor and
+  on the play page. Renaming sprites starts a fresh set of saves.
+- The Phone extension always loads from the site that is running the game, so games that use it
+  work offline and on any ScratchPro site.
 
 ## Development
 

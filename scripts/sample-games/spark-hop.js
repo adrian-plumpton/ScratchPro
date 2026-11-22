@@ -1,4 +1,5 @@
-// Spark Hop: a platformer. Joystick to run, Space to jump, X to dash. Collect sparks for extra time.
+// Spark Hop: a platformer. Joystick to run, Space or swipe up to jump, X or swipe sideways to dash.
+// Collect sparks for extra time.
 
 const {svgDoc, seeded} = require('./builder');
 
@@ -99,16 +100,23 @@ const SPOTS = [[-150, -128], [40, -128], [170, -128]].concat(PLATFORMS.map(([x, 
 const build = project => {
     project.stage({
         costumes: [['Night sky', backdropSvg]],
-        variables: {Sparks: 0, Time: 60, state: 'play'},
+        variables: {Sparks: 0, Time: 60, Best: 0, state: 'play'},
         lists: {'spot x': SPOTS.map(s => s[0]), 'spot y': SPOTS.map(s => s[1])},
         broadcasts: ['game over'],
-        scripts: ({script, whenFlag, setv, chg, repeatUntil, wait, lt, v, broadcast}) => {
+        scripts: ({script, whenFlag, setv, chg, repeatUntil, wait, lt, gt, v, broadcast, ifThen, ifElse,
+            isSaved, saved, saveAs}) => {
             script(whenFlag(), [
+                // The best score is kept on the device with the Phone extension's save blocks.
+                ifElse(isSaved('best sparks'), [setv('Best', saved('best sparks'))], [setv('Best', 0)]),
                 setv('state', 'play'),
                 setv('Sparks', 0),
                 setv('Time', 60),
                 repeatUntil(lt(v('Time'), 1), [wait(1), chg('Time', -1)]),
                 setv('Time', 0),
+                ifThen(gt(v('Sparks'), v('Best')), [
+                    setv('Best', v('Sparks')),
+                    saveAs(v('Sparks'), 'best sparks')
+                ]),
                 setv('state', 'over'),
                 broadcast('game over')
             ]);
@@ -116,6 +124,7 @@ const build = project => {
     });
     project.monitor('Sparks', 5, 5);
     project.monitor('Time', 5, 32);
+    project.monitor('Best', 5, 59);
 
     project.sprite('Level', {
         costumes: [['Platforms', levelSvg, 240, 180]],
@@ -131,7 +140,7 @@ const build = project => {
         scripts: b => {
             const {script, define, whenFlag, whenClone, setv, chg, v, random, lengthOf, item, gotoXY,
                 repeatUntil, not, touching, hide, show, repeat, cloneMyself, setSize, clearEffects, call,
-                forever, turn, ifThen, and, eq, changeSize, changeEffect} = b;
+                forever, turn, ifThen, and, eq, changeSize, changeEffect, vibrate} = b;
             define('jump to a free spot', false, [
                 setv('spot', random(1, lengthOf('spot x'))),
                 gotoXY(item('spot x', v('spot')), item('spot y', v('spot'))),
@@ -151,6 +160,7 @@ const build = project => {
                     ifThen(and(touching('Player'), eq(v('state'), 'play')), [
                         chg('Sparks', 1),
                         chg('Time', 1),
+                        vibrate(25),
                         repeat(5, [changeSize(14), changeEffect('ghost', 20)]),
                         setSize(100),
                         clearEffects(),
@@ -198,7 +208,18 @@ const build = project => {
 
     project.sprite('Player', {
         costumes: [['bot', botSvg, 15, 24], ['hitbox', hitboxSvg, 15, 24]],
-        variables: {'vx': 0, 'vy': 0, 'ground': 0, 'dash': 0, 'dash wait': 0, 'face': 1, 'hurt': 0, 'move': 0},
+        variables: {
+            'vx': 0,
+            'vy': 0,
+            'ground': 0,
+            'dash': 0,
+            'dash wait': 0,
+            'face': 1,
+            'hurt': 0,
+            'move': 0,
+            'swipe jump': 0,
+            'swipe dash': 0
+        },
         x: -200,
         y: -125,
         rotationStyle: 'left-right',
@@ -206,7 +227,7 @@ const build = project => {
             const {script, define, whenFlag, whenReceive, setv, chg, v, add, sub, mul, div, mod, round,
                 join, gt, lt, eq, and, not, key, touching, ypos, ifThen, ifElse, forever, repeatUntil,
                 changeX, changeY, gotoXY, point, rotationStyle, wear, toFront, setEffect, clearEffects,
-                say, sayFor, call} = b;
+                say, sayFor, call, or, vibrate, whenSwiped} = b;
             const playing = () => eq(v('state'), 'play');
             define('step', true, [
                 wear('hitbox'),
@@ -220,10 +241,12 @@ const build = project => {
                     setv('face', v('move')),
                     point(mul(90, v('move')))
                 ]),
-                ifThen(and(and(key('x'), eq(v('dash wait'), 0)), playing()), [
+                // A sideways swipe dashes once; a swipe up counts as holding jump for a few frames.
+                ifThen(and(and(or(key('x'), gt(v('swipe dash'), 0)), eq(v('dash wait'), 0)), playing()), [
                     setv('dash', 6),
                     setv('dash wait', 30)
                 ]),
+                setv('swipe dash', 0),
                 ifThen(gt(v('dash wait'), 0), [chg('dash wait', -1)]),
                 ifElse(gt(v('dash'), 0), [
                     chg('dash', -1),
@@ -233,7 +256,7 @@ const build = project => {
                     setv('vx', add(mul(v('vx'), 0.75), mul(v('move'), 1.6))),
                     chg('vy', -1),
                     // Let go of jump early for a short hop.
-                    ifThen(and(not(key('space')), gt(v('vy'), 4)), [setv('vy', 4)]),
+                    ifThen(and(not(or(key('space'), gt(v('swipe jump'), 0))), gt(v('vy'), 4)), [setv('vy', 4)]),
                     ifThen(lt(v('vy'), -12), [setv('vy', -12)])
                 ]),
                 // Move sideways, and undo the move if it ran into a platform.
@@ -255,10 +278,11 @@ const build = project => {
                 ], [
                     ifThen(gt(v('ground'), 0), [chg('ground', -1)])
                 ]),
-                ifThen(and(and(key('space'), gt(v('ground'), 0)), playing()), [
+                ifThen(and(and(or(key('space'), gt(v('swipe jump'), 0)), gt(v('ground'), 0)), playing()), [
                     setv('vy', 13),
                     setv('ground', 0)
                 ]),
+                ifThen(gt(v('swipe jump'), 0), [chg('swipe jump', -1)]),
                 ifThen(lt(ypos(), -170), [
                     gotoXY(-200, -125),
                     setv('vy', 0)
@@ -268,6 +292,7 @@ const build = project => {
                 ifThen(and(and(touching('Blob'), eq(v('hurt'), 0)), playing()), [
                     setv('hurt', 45),
                     chg('Time', -5),
+                    vibrate(150),
                     setv('vy', 9),
                     setv('vx', mul(-7, v('face')))
                 ]),
@@ -292,14 +317,20 @@ const build = project => {
                 setv('dash wait', 0),
                 setv('face', 1),
                 setv('hurt', 0),
+                setv('swipe jump', 0),
+                setv('swipe dash', 0),
                 forever([call('step', true)])
             ]);
             script(whenFlag(), [
                 sayFor('Collect the sparks! Each one adds a second.', 3),
-                sayFor('Move with the joystick. Space jumps, X dashes.', 3)
+                sayFor('Move with the joystick. Space or swipe up to jump, X or swipe sideways to dash.', 4)
             ]);
+            script(whenSwiped('up'), [setv('swipe jump', 12)]);
+            script(whenSwiped('left'), [setv('face', -1), point(-90), setv('swipe dash', 1)]);
+            script(whenSwiped('right'), [setv('face', 1), point(90), setv('swipe dash', 1)]);
             script(whenReceive('game over'), [
-                say(join('Time! You got ', join(v('Sparks'), ' sparks. Press the green flag to play again.')))
+                say(join('Time! You got ', join(v('Sparks'), join(' sparks. Best: ',
+                    join(v('Best'), '. Press the green flag to play again.')))))
             ]);
         }
     });

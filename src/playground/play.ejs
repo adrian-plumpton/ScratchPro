@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1e1b4b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Spark Hop">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" value="notranslate">
+    <meta name="description" content="Play Spark Hop, a game made with <%= htmlWebpackPlugin.options.APP_NAME %>.">
+    <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="apple-touch-icon" href="<%= htmlWebpackPlugin.options.root %>images/apple-touch-icon.png">
+    <link rel="manifest" href="<%= htmlWebpackPlugin.options.root %>play.webmanifest">
+    <style>
+      html, body {
+        background-color: #1e1b4b;
+        overscroll-behavior: none;
+      }
+      .splash-screen {
+        position: fixed;
+        inset: 0;
+        background-color: #1e1b4b;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        z-index: 1000;
+      }
+      .splash-screen[hidden] {
+        display: none;
+      }
+      .splash-title {
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .splash-spinner:after {
+        content: " ";
+        display: block;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        border: 6px solid;
+        border-color: #facc15 transparent #facc15 transparent;
+        animation: splash-spinner 1.2s linear infinite;
+      }
+      @keyframes splash-spinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <div class="splash-screen">
+        <div class="splash-title">This game needs JavaScript turned on</div>
+      </div>
+    </noscript>
+
+    <div class="splash-screen" hidden id="splash-need-js">
+      <div class="splash-title">Loading game…</div>
+      <div class="splash-spinner"></div>
+    </div>
+
+    <script>
+      (function() {
+        'use strict';
+        var splash = document.getElementById('splash-need-js');
+        splash.hidden = false;
+        window.SplashEnd = function () {
+          splash.hidden = true;
+        };
+      }());
+    </script>
+
+    <div id="app"></div>
+  </body>
+</html>

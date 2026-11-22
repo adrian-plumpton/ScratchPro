@@ -19,21 +19,16 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {connect} from 'react-redux';
 import {compose} from 'redux';
-import {FormattedMessage, defineMessages, injectIntl, intlShape} from 'react-intl';
+import {defineMessages, injectIntl, intlShape} from 'react-intl';
 import {getIsLoading} from '../reducers/project-state.js';
 import AppStateHOC from '../lib/app-state-hoc.jsx';
 import ErrorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
 import TWProjectMetaFetcherHOC from '../lib/tw-project-meta-fetcher-hoc.jsx';
 import TWStateManagerHOC from '../lib/tw-state-manager-hoc.jsx';
-import SBFileUploaderHOC from '../lib/sb-file-uploader-hoc.jsx';
 import TWPackagerIntegrationHOC from '../lib/tw-packager-integration-hoc.jsx';
 import SettingsStore from '../addons/settings-store-singleton';
 import '../lib/tw-fix-history-api';
 import GUI from './render-gui.jsx';
-import MenuBar from '../components/menu-bar/menu-bar.jsx';
-import ProjectInput from '../components/tw-project-input/project-input.jsx';
-import FeaturedProjects from '../components/tw-featured-projects/featured-projects.jsx';
-import SampleGames from '../components/sp-sample-games/sample-games.jsx';
 import Description from '../components/tw-description/description.jsx';
 import BrowserModal from '../components/browser-modal/browser-modal.jsx';
 import CloudVariableBadge from '../containers/tw-cloud-variable-badge.jsx';
@@ -46,6 +41,7 @@ import InvalidEmbed from '../components/tw-invalid-embed/invalid-embed.jsx';
 import {APP_NAME} from '../lib/brand.js';
 import SPTouchControls from '../containers/sp-touch-controls.jsx';
 import SPMobileEditor from '../containers/sp-mobile-editor.jsx';
+import {HomeHeader, HomeHero, HomeSections, HomeFooter} from '../components/sp-home/home.jsx';
 
 import styles from './interface.css';
 
@@ -66,11 +62,6 @@ const messages = defineMessages({
     }
 });
 
-const WrappedMenuBar = compose(
-    SBFileUploaderHOC,
-    TWPackagerIntegrationHOC
-)(MenuBar);
-
 if (AddonChannels.reloadChannel) {
     AddonChannels.reloadChannel.addEventListener('message', () => {
         location.reload();
@@ -84,110 +75,6 @@ if (AddonChannels.changeChannel) {
 }
 
 runAddons();
-
-const Footer = () => (
-    <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-            <div className={styles.footerText}>
-                <FormattedMessage
-                    // eslint-disable-next-line max-len
-                    defaultMessage="{APP_NAME} is not affiliated with Scratch, the Scratch Team, or the Scratch Foundation."
-                    description="Disclaimer that TurboWarp is not connected to Scratch"
-                    id="tw.footer.disclaimer"
-                    values={{
-                        APP_NAME
-                    }}
-                />
-            </div>
-
-            <div className={styles.footerText}>
-                <FormattedMessage
-                    // eslint-disable-next-line max-len
-                    defaultMessage="Scratch is a project of the Scratch Foundation. It is available for free at {scratchDotOrg}."
-                    description="A disclaimer that Scratch requires when referring to Scratch. {scratchDotOrg} is a link with text 'https://scratch.org/'"
-                    id="tw.footer.scratchDisclaimer"
-                    values={{
-                        scratchDotOrg: (
-                            <a
-                                href="https://scratch.org/"
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {'https://scratch.org/'}
-                            </a>
-                        )
-                    }}
-                />
-            </div>
-
-            <div className={styles.footerColumns}>
-                <div className={styles.footerSection}>
-                    <a href="credits.html">
-                        <FormattedMessage
-                            defaultMessage="Credits"
-                            description="Credits link in footer"
-                            id="tw.footer.credits"
-                        />
-                    </a>
-                </div>
-                <div className={styles.footerSection}>
-                    <a href="https://desktop.turbowarp.org/">
-                        {/* Do not translate */}
-                        {'TurboWarp Desktop'}
-                    </a>
-                    <a href="https://packager.turbowarp.org/">
-                        {/* Do not translate */}
-                        {'TurboWarp Packager'}
-                    </a>
-                    <a href="https://docs.turbowarp.org/embedding">
-                        <FormattedMessage
-                            defaultMessage="Embedding"
-                            description="Link in footer to embedding documentation for embedding link"
-                            id="tw.footer.embed"
-                        />
-                    </a>
-                    <a href="https://docs.turbowarp.org/url-parameters">
-                        <FormattedMessage
-                            defaultMessage="URL Parameters"
-                            description="Link in footer to URL parameters documentation"
-                            id="tw.footer.parameters"
-                        />
-                    </a>
-                    <a href="https://docs.turbowarp.org/">
-                        <FormattedMessage
-                            defaultMessage="Documentation"
-                            description="Link in footer to additional documentation"
-                            id="tw.footer.documentation"
-                        />
-                    </a>
-                </div>
-                <div className={styles.footerSection}>
-                    <a href="https://github.com/adrian-plumpton/ScratchPro/issues">
-                        <FormattedMessage
-                            defaultMessage="Feedback & Bugs"
-                            description="Link to feedback/bugs page"
-                            id="tw.feedback"
-                        />
-                    </a>
-                    <a href="https://github.com/adrian-plumpton/ScratchPro">
-                        <FormattedMessage
-                            defaultMessage="Source Code"
-                            description="Link to source code"
-                            id="tw.code"
-                        />
-                    </a>
-                    <a href="privacy.html">
-                        <FormattedMessage
-                            defaultMessage="Privacy Policy"
-                            description="Link to privacy policy"
-                            id="tw.privacy"
-                        />
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
-);
 
 class Interface extends React.Component {
     constructor (props) {
@@ -235,17 +122,9 @@ class Interface extends React.Component {
                 dir={isRtl ? 'rtl' : 'ltr'}
             >
                 <TWWindchimeSubmitter />
-                {isHomepage ? (
-                    <div className={styles.menu}>
-                        <WrappedMenuBar
-                            canChangeLanguage
-                            canManageFiles
-                            canChangeTheme
-                            enableSeeInside
-                            onClickAddonSettings={handleClickAddonSettings}
-                        />
-                    </div>
-                ) : null}
+                {/* ScratchPro: a simple header and hero instead of the full menu bar */}
+                {isHomepage ? <HomeHeader /> : null}
+                {isHomepage ? <HomeHero /> : null}
                 <div
                     className={styles.center}
                     style={isPlayerOnly ? ({
@@ -267,9 +146,6 @@ class Interface extends React.Component {
                             {isBrowserSupported() ? null : (
                                 <BrowserModal isRtl={isRtl} />
                             )}
-                            <div className={styles.section}>
-                                <ProjectInput />
-                            </div>
                             {hasCloudVariables && projectId !== '0' && (
                                 <div className={styles.section}>
                                     <CloudVariableBadge />
@@ -284,29 +160,11 @@ class Interface extends React.Component {
                                     />
                                 </div>
                             ) : null}
-                            <div className={styles.section}>
-                                <p>
-                                    <FormattedMessage
-                                        // eslint-disable-next-line max-len
-                                        defaultMessage="{APP_NAME} is a block-coding editor for making games that play well on phones and tablets, with touch controls. It is based on TurboWarp. Try a sample game below, or load any Scratch project by entering its ID or URL above."
-                                        description="Description of TurboWarp on the homepage"
-                                        id="sp.home.description"
-                                        values={{
-                                            APP_NAME
-                                        }}
-                                    />
-                                </p>
-                            </div>
-                            <div className={styles.section}>
-                                <SampleGames />
-                            </div>
-                            <div className={styles.section}>
-                                <FeaturedProjects studio="27205657" />
-                            </div>
                         </React.Fragment>
                     ) : null}
                 </div>
-                {isHomepage && <Footer />}
+                {isHomepage ? <HomeSections /> : null}
+                {isHomepage ? <HomeFooter /> : null}
             </div>
         );
     }
