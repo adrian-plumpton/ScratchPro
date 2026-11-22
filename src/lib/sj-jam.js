@@ -88,6 +88,29 @@ const saveForJam = vm => {
     }
 };
 
+/**
+ * A link in a chat message: to a sprite, or to a script in a sprite. Labels are typed by people
+ * (sprite names) or come from code, so they go through the chat filter too.
+ * @param {*} link The link as sent.
+ * @returns {?object} {kind: 'sprite'|'script', target, blockId?, label}, or null if it isn't valid.
+ */
+const cleanLink = link => {
+    if (!link || typeof link !== 'object' || !['sprite', 'script'].includes(link.kind)) return null;
+    const target = String(link.target || '').slice(0, 60);
+    if (!target) return null;
+    const blockId = link.kind === 'script' ? String(link.blockId || '').slice(0, 40) : null;
+    if (link.kind === 'script' && !blockId) return null;
+    const checked = filterChat(String(link.label || '').slice(0, 60));
+    const targetChecked = filterChat(target === STAGE ? 'Stage' : target);
+    return {
+        kind: link.kind,
+        target,
+        blockId,
+        label: checked.ok && checked.text ? checked.text : (link.kind === 'sprite' ? 'a sprite' : 'some code'),
+        targetLabel: targetChecked.ok ? targetChecked.text : 'a sprite'
+    };
+};
+
 const targetName = target => (target.isStage ? STAGE : target.getName());
 
 const addActivity = text => {
@@ -621,27 +644,40 @@ class JamSession {
     }
 
     // Chat. Messages are checked before sending and again on arrival.
-    sendChat (text) {
+    sendChat (text, link) {
+        const safeLink = cleanLink(link);
         const checked = filterChat(text);
-        if (!checked.ok) return checked;
+        if (!checked.ok && !(safeLink && !checked.reason)) return checked;
         const self = state.self || {};
-        const message = {type: 'chat',
+        const message = {
+            type: 'chat',
             id: `${Date.now()}-${Math.random().toString(36)
                 .slice(2, 8)}`,
-            text: checked.text};
+            text: checked.ok ? checked.text : '',
+            link: safeLink
+        };
         this.room.broadcastEvent(message);
-        this.addChat({id: message.id, text: checked.text, name: self.name, color: self.color, mine: true});
-        return checked;
+        this.addChat({
+            id: message.id,
+            text: message.text,
+            link: safeLink,
+            name: self.name,
+            color: self.color,
+            mine: true
+        });
+        return {ok: true};
     }
 
     receiveChat (event, user, connectionId) {
         const userId = user && user.id;
         if (userId && state.muted.includes(userId)) return;
+        const link = cleanLink(event.link);
         const checked = filterChat(event.text);
-        if (!checked.ok) return;
+        if (!checked.ok && !(link && !checked.reason)) return;
         this.addChat({
             id: String(event.id),
-            text: checked.text,
+            text: checked.ok ? checked.text : '',
+            link,
             name: (user && user.info && user.info.name) || 'Someone',
             color: user && user.info && user.info.color,
             userId,
@@ -709,7 +745,8 @@ if (typeof window !== 'undefined' && typeof location !== 'undefined' && location
 }
 const setJamTab = tab => session && session.updatePresence({tab});
 const updateJamPresence = patch => session && session.updatePresence(patch);
-const sendJamChat = text => (session ? session.sendChat(text) : {ok: false, reason: 'You\'re not in a jam.'});
+const sendJamChat = (text, link) => (session ? session.sendChat(text, link) :
+    {ok: false, reason: 'You\'re not in a jam.'});
 const markChatRead = () => setState({unread: 0});
 const muteInChat = userId => setState({
     muted: state.muted.includes(userId) ? state.muted.filter(id => id !== userId) : [...state.muted, userId],
@@ -719,6 +756,7 @@ const getJamRoom = () => (session ? session.room : null);
 const setJamCursor = cursor => session && session.updatePresence({cursor});
 
 export {
+    addActivity as noteJam,
     sendJamChat,
     markChatRead,
     muteInChat,

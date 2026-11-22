@@ -263,6 +263,84 @@ check(bChat.includes('make the jump higher'), 'Chat messages reach the other mak
 check(!bChat.some(t => t.includes('snap')), 'Contact details are blocked');
 check(bChat.includes('this is ****'), 'Rude words are starred out');
 
+// The talk panel docks beside the editor, which shrinks to make room.
+check(await a.evaluate(() => {
+    const wrapper = document.querySelector('[class*="gui_page-wrapper"]');
+    return Math.abs(wrapper.getBoundingClientRect().width - (window.innerWidth - 360)) < 2;
+}), 'The docked chat panel squashes the editor instead of covering it');
+
+// Links: A shares the Player sprite; B follows the link.
+await a.bringToFront();
+await a.evaluate(() => vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Player').id));
+await a.waitForTimeout(600);
+await a.getByRole('button', {name: 'Share a sprite or script'}).click();
+await a.getByRole('menuitem', {name: /This sprite/}).click();
+await b.bringToFront();
+await b.getByRole('button', {name: '🎯 Player'}).waitFor({timeout: 5000});
+await b.getByRole('button', {name: '🎯 Player'}).click();
+await b.waitForTimeout(800);
+check(await b.evaluate(() => vm.editingTarget.getName()) === 'Player', 'A sprite link takes you to the sprite');
+
+// A clicks a script and shares it; B follows it to the script, which glows.
+await b.evaluate(() => vm.setEditingTarget(vm.runtime.getSpriteTargetByName('Spark').id));
+await a.bringToFront();
+const scriptId = await a.evaluate(() => {
+    const top = ScratchBlocks.getMainWorkspace().getTopBlocks(true).find(x => x.type === 'event_whenflagclicked');
+    top.select();
+    return top.id;
+});
+await a.getByRole('button', {name: 'Share a sprite or script'}).click();
+await a.getByRole('menuitem', {name: /The script I clicked/}).click();
+await b.bringToFront();
+const chip = b.locator('[class*="jam-talk_chip_"]', {hasText: '🧩'}).last();
+await chip.waitFor({timeout: 5000});
+await chip.click();
+await b.waitForTimeout(800);
+check(await b.evaluate(id => vm.editingTarget.getName() === 'Player' &&
+    !!ScratchBlocks.getMainWorkspace().getBlockById(id).isGlowingStack_, scriptId),
+'A script link opens the sprite and makes the script glow');
+
+// Dragging a script onto the chat shares it too.
+await a.bringToFront();
+const before = await b.evaluate(() => window.__sjJam.getJamState().chat.filter(m => m.link).length);
+const start = await a.evaluate(async () => {
+    const ws = ScratchBlocks.getMainWorkspace();
+    const top = ws.getTopBlocks(true).find(x => x.type === 'event_whenflagclicked');
+    ws.centerOnBlock(top.id);
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const box = top.getSvgRoot().getBoundingClientRect();
+    return {x: box.left + 20, y: box.top + 15};
+});
+const panel = await a.evaluate(() => {
+    const box = document.querySelector('aside[aria-label="Jam chat and call"]').getBoundingClientRect();
+    return {x: box.left + (box.width / 2), y: box.top + (box.height / 2)};
+});
+await a.mouse.move(start.x, start.y);
+await a.mouse.down();
+for (let i = 1; i <= 15; i++) {
+    await a.mouse.move(start.x + ((panel.x - start.x) * i / 15), start.y + ((panel.y - start.y) * i / 15));
+}
+await a.waitForTimeout(200);
+await a.mouse.up();
+await b.waitForTimeout(1200);
+check(await b.evaluate(() => window.__sjJam.getJamState().chat.filter(m => m.link).length) === before + 1,
+    'Dragging a script onto the chat shares a link to it');
+
+// Pop out into its own window, then back in.
+await a.bringToFront();
+const [popup] = await Promise.all([
+    context.waitForEvent('page'),
+    a.getByRole('button', {name: '⧉ POP OUT'}).click()
+]);
+await popup.waitForTimeout(800);
+check(await popup.getByPlaceholder('Say something…').isVisible(), 'The chat pops out into its own window');
+check(await a.evaluate(() => !document.body.classList.contains('sj-talk-docked')),
+    'and the editor gets its full width back');
+await popup.getByRole('button', {name: '⇤ POP IN'}).click();
+await a.waitForTimeout(800);
+check(popup.isClosed() && await a.evaluate(() => document.body.classList.contains('sj-talk-docked')),
+    'Pop in puts it back beside the editor');
+
 // Call: both join; A turns the mic and camera on; B gets live audio and video.
 for (const page of [a, b]) {
     await page.bringToFront();
@@ -275,9 +353,10 @@ await b.waitForFunction(() => [...document.querySelectorAll('video')].some(v => 
     {timeout: 40000}).catch(() => {});
 check(await b.evaluate(() => [...document.querySelectorAll('video')].some(v => v.videoWidth > 0)),
     'B sees A on camera');
-check(await b.evaluate(() => [...document.querySelectorAll('audio')]
-    .some(el => el.srcObject && el.srcObject.getAudioTracks().some(t => t.readyState === 'live'))),
-'B gets A\'s microphone');
+check(await b.evaluate(() => [...window.__sjCall.peers.values()].some(p => p.pc.connectionState === 'connected') &&
+    [...document.querySelectorAll('audio')].some(el => el.srcObject &&
+        el.srcObject.getAudioTracks().some(t => t.readyState === 'live' && !t.muted))),
+'B gets A\'s microphone (connected, with sound arriving)');
 
 // The host turns B's mic off.
 await b.getByRole('button', {name: '🎙 MIC OFF'}).click();

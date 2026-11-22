@@ -147,9 +147,23 @@ const build = project => {
                 show(),
                 repeatUntil(lt(ypos(), -170), [
                     ifThen(playing(), [changeY(mul(mul(v('speed'), v('pace')), -1))]),
-                    ifThen(and(touching('Player'), playing()), [broadcast('crash')])
+                    // Crashes use the Hitbox (a little smaller than the car), so near misses don't count.
+                    ifThen(and(touching('Hitbox'), playing()), [broadcast('crash')])
                 ]),
                 deleteClone()
+            ]);
+        }
+    });
+
+    // An invisible box a bit smaller than the player's car, which follows it. Traffic checks for this
+    // instead of the car picture, so clipping a corner or tilting while steering isn't a crash.
+    project.sprite('Hitbox', {
+        costumes: [['hitbox', svgDoc(24, 46, '<rect width="24" height="46" rx="8" fill="#ff5d73"/>'), 12, 23]],
+        y: -125,
+        scripts: ({script, whenFlag, forever, goTo, setEffect}) => {
+            script(whenFlag(), [
+                setEffect('ghost', 100),
+                forever([goTo('Player')])
             ]);
         }
     });

@@ -5,6 +5,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import {connect} from 'react-redux';
 import sj from '../sj/sj.css';
 import {getJamState, onJamState, sendJamChat, markChatRead, muteInChat} from '../../lib/sj-jam';
 import {
@@ -12,6 +13,7 @@ import {
     setVolume, setPeerVolume, hidePeerVideo, hostControl, clearCallNotice
 } from '../../lib/sj-call';
 import {MAX_LENGTH} from '../../lib/sj-chat-filter';
+import {spriteLink, scriptLink, selectedScriptLink, followLink} from '../../lib/sj-jam-links';
 import styles from './jam-talk.css';
 
 const useStore = (get, subscribe) => {
@@ -262,21 +264,99 @@ ReportDialog.propTypes = {
     onClose: PropTypes.func.isRequired
 };
 
+// A link in a message: a chip that takes you to the sprite or script.
+const LinkChip = ({link, onFollow}) => (
+    <button
+        className={styles.chip}
+        onClick={() => onFollow(link)}
+        title={link.kind === 'script' ? `Show this code in ${link.targetLabel}` : `Go to ${link.targetLabel}`}
+    >
+        {link.kind === 'script' ? `🧩 ${link.label}` : `🎯 ${link.label}`}
+        {link.kind === 'script' ? <span className={styles.chipWhere}>{`in ${link.targetLabel}`}</span> : null}
+    </button>
+);
+LinkChip.propTypes = {link: PropTypes.object.isRequired, onFollow: PropTypes.func.isRequired};
+
 /**
- * The jam's talk panel: call plus chat.
+ * The jam's talk panel: call plus chat. Docked beside the editor, or popped out into its own window.
+ * Sprites and scripts dropped on it (or shared with the 📍 button) become links in the chat.
  * @param {object} props Props.
  * @param {Function} props.onClose Close the panel.
+ * @param {string} props.mode 'docked' or 'popout'.
+ * @param {Function} props.onPopOut Move the panel into its own window.
+ * @param {Function} props.onPopIn Move it back beside the editor.
+ * @param {object} props.vm The VM.
+ * @param {object} props.assetDrag The editor's sprite drag state.
  * @returns {React.ReactElement} The panel.
  */
-const JamTalk = ({onClose}) => {
+const JamTalkComponent = ({onClose, mode, onPopOut, onPopIn, vm, assetDrag}) => {
     const jam = useStore(getJamState, onJamState);
     const call = useStore(getCallState, onCallState);
     const [draft, setDraft] = useState('');
     const [problem, setProblem] = useState('');
     const [settings, setSettings] = useState(false);
     const [report, setReport] = useState(null);
+    const [share, setShare] = useState(false);
+    const [dropHint, setDropHint] = useState(false);
     const listRef = useRef(null);
+    const panelRef = useRef(null);
+    const pointer = useRef({x: -1, y: -1});
+    const wasDragging = useRef(false);
     const isHost = jam.jam && jam.jam.isHost;
+    const docked = mode !== 'popout';
+
+    const overPanel = () => {
+        if (!docked || !panelRef.current) return false;
+        const box = panelRef.current.getBoundingClientRect();
+        const {x, y} = pointer.current;
+        return x >= box.left && x <= box.right && y >= box.top && y <= box.bottom;
+    };
+    const shareLink = link => {
+        if (!link) return;
+        const result = sendJamChat('', link);
+        if (!result.ok && result.reason) setProblem(result.reason);
+    };
+    const follow = async link => {
+        const result = await followLink(vm, link);
+        setProblem(result || '');
+    };
+
+    // Dragging a sprite or a script onto the docked panel shares it.
+    useEffect(() => {
+        if (!docked) return;
+        const onMove = e => {
+            pointer.current = {x: e.clientX, y: e.clientY};
+            const ws = window.ScratchBlocks && window.ScratchBlocks.getMainWorkspace &&
+                window.ScratchBlocks.getMainWorkspace();
+            const dragging = (ws && ws.isDragging()) || assetDrag.dragging;
+            setDropHint(!!dragging && overPanel());
+        };
+        // The engine passes the dragged script's top block as the second value.
+        const onBlockDragEnd = (blocks, topBlockId) => {
+            setDropHint(false);
+            if (!overPanel()) return;
+            const id = topBlockId || (blocks && blocks.length && blocks[0].id);
+            if (id) shareLink(scriptLink(vm, id));
+        };
+        document.addEventListener('pointermove', onMove, true);
+        document.addEventListener('mousemove', onMove, true);
+        vm.on('BLOCK_DRAG_END', onBlockDragEnd);
+        return () => {
+            document.removeEventListener('pointermove', onMove, true);
+            document.removeEventListener('mousemove', onMove, true);
+            vm.removeListener('BLOCK_DRAG_END', onBlockDragEnd);
+        };
+    }, [docked, assetDrag.dragging]);
+    const dragged = useRef(null);
+    useEffect(() => {
+        if (assetDrag.dragging && assetDrag.dragType === 'SPRITE') dragged.current = assetDrag.payload;
+        if (wasDragging.current && !assetDrag.dragging && dragged.current && overPanel()) {
+            shareLink(spriteLink(vm, dragged.current));
+        }
+        if (!assetDrag.dragging) dragged.current = null;
+        wasDragging.current = assetDrag.dragging;
+        if (!assetDrag.dragging) setDropHint(false);
+    }, [assetDrag.dragging]);
 
     useEffect(() => {
         markChatRead();
@@ -285,6 +365,7 @@ const JamTalk = ({onClose}) => {
 
     const send = e => {
         e.preventDefault();
+        if (!draft.trim()) return;
         const result = sendJamChat(draft);
         if (result.ok) {
             setDraft('');
@@ -297,17 +378,37 @@ const JamTalk = ({onClose}) => {
     const self = jam.self || {};
     return (
         <aside
-            className={classNames(sj.tokens, styles.panel)}
+            ref={panelRef}
+            className={classNames(sj.tokens, styles.panel, {[styles.popout]: !docked})}
             aria-label="Jam chat and call"
         >
             <div className={styles.head}>
                 <h2>{'TALK'}</h2>
+                {docked ? (
+                    <button
+                        className={styles.headButton}
+                        onClick={onPopOut}
+                        title="Open in its own window"
+                    >{'⧉ POP OUT'}</button>
+                ) : (
+                    <button
+                        className={styles.headButton}
+                        onClick={onPopIn}
+                        title="Put it back beside the editor"
+                    >{'⇤ POP IN'}</button>
+                )}
                 <button
                     className={styles.close}
                     onClick={onClose}
                     aria-label="Close chat"
                 >{'✕'}</button>
             </div>
+            {dropHint ? (
+                <div
+                    className={styles.dropHint}
+                    aria-hidden="true"
+                >{'Drop to share it in the chat'}</div>
+            ) : null}
 
             <section
                 className={styles.call}
@@ -440,7 +541,11 @@ const JamTalk = ({onClose}) => {
                             className={classNames(styles.message, {[styles.mine]: message.mine})}
                         >
                             <b style={{color: message.color || '#c9a7ff'}}>{message.mine ? 'You' : message.name}</b>
-                            <span>{message.text}</span>
+                            {message.text ? <span>{message.text}</span> : null}
+                            {message.link ? <LinkChip
+                                link={message.link}
+                                onFollow={follow}
+                            /> : null}
                             {message.mine ? null : (
                                 <span className={styles.messageTools}>
                                     <button
@@ -461,10 +566,43 @@ const JamTalk = ({onClose}) => {
                         role="alert"
                     >{problem}</p>
                 ) : null}
+                {share ? (
+                    <div
+                        className={styles.shareMenu}
+                        role="menu"
+                    >
+                        <button
+                            role="menuitem"
+                            onClick={() => {
+                                setShare(false);
+                                if (vm.editingTarget) shareLink(spriteLink(vm, vm.editingTarget.id));
+                            }}
+                        >{`🎯 This sprite${vm.editingTarget && !vm.editingTarget.isStage ?
+                                ` (${vm.editingTarget.getName()})` : ''}`}</button>
+                        <button
+                            role="menuitem"
+                            onClick={() => {
+                                setShare(false);
+                                const link = selectedScriptLink(vm);
+                                if (link) shareLink(link);
+                                else setProblem('Click a script in the code area first, then share it.');
+                            }}
+                        >{'🧩 The script I clicked'}</button>
+                        <p>{docked ? 'Or drag a sprite or a script onto the chat.' : ''}</p>
+                    </div>
+                ) : null}
                 <form
                     className={styles.compose}
                     onSubmit={send}
                 >
+                    <button
+                        className={styles.shareButton}
+                        type="button"
+                        onClick={() => setShare(!share)}
+                        aria-expanded={share}
+                        aria-label="Share a sprite or script"
+                        title="Share a sprite or script"
+                    >{'📍'}</button>
                     <input
                         value={draft}
                         onChange={e => {
@@ -493,7 +631,19 @@ const JamTalk = ({onClose}) => {
         </aside>
     );
 };
-JamTalk.propTypes = {onClose: PropTypes.func.isRequired};
+JamTalkComponent.propTypes = {
+    onClose: PropTypes.func.isRequired,
+    mode: PropTypes.oneOf(['docked', 'popout']),
+    onPopOut: PropTypes.func,
+    onPopIn: PropTypes.func,
+    vm: PropTypes.object.isRequired,
+    assetDrag: PropTypes.object
+};
+
+const JamTalk = connect(state => ({
+    vm: state.scratchGui.vm,
+    assetDrag: state.scratchGui.assetDrag
+}))(JamTalkComponent);
 
 /**
  * The chat button for the menu bar, with unread messages and how many are in the call.

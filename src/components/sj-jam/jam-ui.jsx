@@ -3,6 +3,7 @@
 /* eslint-disable react/jsx-no-bind */ // Function components with hooks; handlers are cheap here.
 
 import React, {useEffect, useRef, useState} from 'react';
+import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {connect} from 'react-redux';
@@ -12,7 +13,7 @@ import sj from '../sj/sj.css';
 import {openAccountDialog, useAccount} from '../sj/account.jsx';
 import {startAuth, onAccount, isAccountReady} from '../../lib/sj-auth';
 import {
-    saveForJam, joinJam, leaveJam, getJamState, onJamState, broadcastJam, setJamTab, setJamCursor
+    saveForJam, joinJam, leaveJam, noteJam, getJamState, onJamState, broadcastJam, setJamTab, setJamCursor
 } from '../../lib/sj-jam';
 import {startJam, getJam, removeFromJam, endJam, jamLink, parseJamCode} from '../../lib/sj-jam-api';
 import {links} from '../../lib/sj-links';
@@ -24,6 +25,68 @@ import styles from './jam-ui.css';
 const api = name => {
     const hooks = location.hostname === 'localhost' && window.__sjJamTest;
     return (hooks && hooks[name]) || {endJam, removeFromJam}[name];
+};
+
+/**
+ * Render children in a separate browser window (the talk panel popped out). The editor's styles are
+ * copied in. Closing the window calls onClosed.
+ * @param {object} props Props.
+ * @returns {?React.ReactElement} A portal into the window.
+ */
+const PopoutWindow = ({children, onClosed, onBlocked}) => {
+    const [container, setContainer] = useState(null);
+    useEffect(() => {
+        const win = window.open('', 'sparkjam-talk', 'popup,width=400,height=760');
+        if (!win) {
+            onBlocked();
+            return;
+        }
+        const doc = win.document;
+        doc.title = 'Sparkjam: jam talk';
+        doc.head.innerHTML = '';
+        document.querySelectorAll('style, link[rel="stylesheet"]').forEach(node => {
+            const copy = node.cloneNode(true);
+            if (copy.tagName === 'LINK') copy.href = node.href;
+            doc.head.appendChild(copy);
+        });
+        doc.body.innerHTML = '';
+        doc.body.style.margin = '0';
+        doc.body.style.background = '#14001f';
+        const div = doc.createElement('div');
+        doc.body.appendChild(div);
+        setContainer(div);
+        const timer = setInterval(() => {
+            if (win.closed) {
+                clearInterval(timer);
+                onClosed();
+            }
+        }, 400);
+        const closeWithEditor = () => win.close();
+        window.addEventListener('beforeunload', closeWithEditor);
+        return () => {
+            clearInterval(timer);
+            window.removeEventListener('beforeunload', closeWithEditor);
+            if (!win.closed) win.close();
+        };
+    }, []);
+    return container ? ReactDOM.createPortal(children, container) : null;
+};
+PopoutWindow.propTypes = {children: PropTypes.node, onClosed: PropTypes.func, onBlocked: PropTypes.func};
+
+const TALK_WIDTH = 360;
+
+// While the talk panel is docked, the whole editor shrinks to make room for it (see jam-ui.css).
+const useDockedTalk = docked => {
+    useEffect(() => {
+        document.body.classList.toggle('sj-talk-docked', docked);
+        document.body.style.setProperty('--sj-talk-width', `${TALK_WIDTH}px`);
+        // The code area and stage measure themselves on resize.
+        window.dispatchEvent(new Event('resize'));
+        return () => {
+            document.body.classList.remove('sj-talk-docked');
+            window.dispatchEvent(new Event('resize'));
+        };
+    }, [docked]);
 };
 
 const useJam = () => {
@@ -369,6 +432,7 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     const [people, setPeople] = useState(false);
     const [ending, setEnding] = useState(false);
     const [talk, setTalk] = useState(false);
+    const [talkMode, setTalkMode] = useState('docked');
     const [starting, setStarting] = useState(false);
     const [problem, setProblem] = useState('');
     const autoDone = useRef(false);
@@ -417,6 +481,7 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     }, [activeTab, jam.status]);
 
     const live = jam.status === 'live' || jam.status === 'reconnecting';
+    useDockedTalk(talk && live && talkMode === 'docked');
     // While jamming, the menu bar makes room for the jam controls (see jam-ui.css).
     useEffect(() => {
         document.body.classList.toggle('sj-jamming', live);
@@ -502,7 +567,31 @@ const JamControlsComponent = ({vm, projectTitle, isShowingProject, activeTab}) =
     return (
         <div className={classNames(sj.tokens, styles.controls)}>
             {controls}
-            {talk && live ? <JamTalk onClose={() => setTalk(false)} /> : null}
+            {talk && live && talkMode === 'docked' ? (
+                <JamTalk
+                    mode="docked"
+                    onClose={() => setTalk(false)}
+                    onPopOut={() => setTalkMode('popout')}
+                />
+            ) : null}
+            {talk && live && talkMode === 'popout' ? (
+                <PopoutWindow
+                    onClosed={() => setTalkMode('docked')}
+                    onBlocked={() => {
+                        setTalkMode('docked');
+                        noteJam('Your browser blocked the chat window. Allow pop-ups for this site to pop it out.');
+                    }}
+                >
+                    <JamTalk
+                        mode="popout"
+                        onClose={() => {
+                            setTalk(false);
+                            setTalkMode('docked');
+                        }}
+                        onPopIn={() => setTalkMode('docked')}
+                    />
+                </PopoutWindow>
+            ) : null}
             {invite && live ? (
                 <InviteDialog
                     code={jam.code}

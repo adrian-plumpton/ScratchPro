@@ -194,7 +194,32 @@ const disconnect = connectionId => {
     refreshPeers();
 };
 
-const handleSignal = async (event, user, from) => {
+const processSignal = async (peer, event, from) => {
+    const pc = peer.pc;
+    try {
+        if (event.kind === 'description') {
+            const description = event.description;
+            const collision = description.type === 'offer' && (peer.makingOffer || pc.signalingState !== 'stable');
+            peer.ignoreOffer = !peer.polite && collision;
+            if (peer.ignoreOffer) return;
+            await pc.setRemoteDescription(description);
+            if (description.type === 'offer') {
+                await pc.setLocalDescription();
+                send(from, {kind: 'description', description: pc.localDescription.toJSON()});
+            }
+        } else if (event.kind === 'candidate') {
+            try {
+                await pc.addIceCandidate(event.candidate);
+            } catch (e) {
+                if (!peer.ignoreOffer) throw e;
+            }
+        }
+    } catch (e) {
+        log.warn('Call: signalling problem', e);
+    }
+};
+
+const handleSignal = (event, user, from) => {
     const me = myConnectionId();
     if (event.type === 'call-control') {
         if (event.to !== me || !(user && user.info && user.info.host)) return;
@@ -225,29 +250,12 @@ const handleSignal = async (event, user, from) => {
         return;
     }
     const peer = peers.get(from) || connect(from, me > from);
-    const pc = peer.pc;
-    try {
-        if (event.kind === 'description') {
-            const description = event.description;
-            const collision = description.type === 'offer' && (peer.makingOffer || pc.signalingState !== 'stable');
-            peer.ignoreOffer = !peer.polite && collision;
-            if (peer.ignoreOffer) return;
-            await pc.setRemoteDescription(description);
-            if (description.type === 'offer') {
-                await pc.setLocalDescription();
-                send(from, {kind: 'description', description: pc.localDescription.toJSON()});
-            }
-        } else if (event.kind === 'candidate') {
-            try {
-                await pc.addIceCandidate(event.candidate);
-            } catch (e) {
-                if (!peer.ignoreOffer) throw e;
-            }
-        }
-    } catch (e) {
-        log.warn('Call: signalling problem', e);
-    }
+    // Handle each person's messages strictly in order: a connection candidate that overtakes the
+    // description it belongs to fails and is lost, and the call never connects.
+    peer.queue = (peer.queue || Promise.resolve()).then(() => processSignal(peer, event, from));
+    return peer.queue;
 };
+
 
 const listDevices = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
@@ -455,6 +463,11 @@ const leaveCall = () => {
 };
 
 const clearCallNotice = () => setState({notice: null, error: null});
+
+// Local testing only.
+if (typeof location !== 'undefined' && location.hostname === 'localhost') {
+    window.__sjCall = {getCallState, peers};
+}
 
 export {
     getCallState,

@@ -463,3 +463,26 @@
     border: 2px solid var(--night);
     font-size: 8px;
 }
+
+/* The talk panel docked beside the editor: the editor shrinks rather than being covered. */
+:global(body.sj-talk-docked) [class*="gui_page-wrapper"] {
+    width: calc(100% - var(--sj-talk-width, 360px));
+    /* The editor normally won't go below 1024px; beside the panel it can get a little narrower. */
+    min-width: 760px !important;
+}
+
+/* The editor is narrower beside the docked panel, so use the compact menu bar. */
+:global(body.sj-talk-docked) [class*="menu-bar_sj-wordmark"],
+:global(body.sj-talk-docked) [class*="menu-bar_feedback-link"],
+:global(body.sj-talk-docked) [class*="menu-bar_community-button-wrapper"],
+:global(body.sj-talk-docked) [class*="menu-bar_collapsible-label"],
+:global(body.sj-talk-docked) .code-chip,
+:global(body.sj-talk-docked) .long {
+    display: none;
+}
+
+:global(body.sj-talk-docked) .pill {
+    font-size: 0;
+    gap: 0;
+    padding: 7px;
+}

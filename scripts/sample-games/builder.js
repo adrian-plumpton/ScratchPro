@@ -172,6 +172,7 @@ const createProject = () => {
         }}),
         rotationStyle: style => mk('motion_setrotationstyle', {fields: {STYLE: [style, null]}}),
         play: name => mk('sound_play', {inputs: {SOUND_MENU: menu('sound_sounds_menu', 'SOUND_MENU', name)}}),
+        goTo: name => mk('motion_goto', {inputs: {TO: menu('motion_goto_menu', 'TO', name)}}),
         wear: name => mk('looks_switchcostumeto', {inputs: {COSTUME: menu('looks_costume', 'COSTUME', name)}}),
         show: () => mk('looks_show'),
         hide: () => mk('looks_hide'),

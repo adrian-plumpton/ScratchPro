@@ -1,7 +1,7 @@
 /* Sparkjam jam talk panel: call and chat. */
 .panel {
     position: fixed;
-    top: 48px;
+    top: 0;
     right: 0;
     bottom: 0;
     z-index: 800;
@@ -461,4 +461,103 @@
     display: flex;
     gap: 12px;
     margin-top: 6px;
+}
+
+.popout {
+    position: static;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    border-left: 0;
+    box-shadow: none;
+}
+
+.head-button {
+    margin-left: auto;
+    padding: 6px 8px;
+    border: 2px solid var(--edge);
+    background: none;
+    color: var(--lav);
+    font: 400 8px var(--px);
+}
+
+.head-button + .close {
+    margin-left: 8px;
+}
+
+.drop-hint {
+    position: absolute;
+    inset: 50px 10px 10px;
+    z-index: 10;
+    display: grid;
+    place-items: center;
+    border: 3px dashed var(--cyan);
+    border-radius: 12px;
+    background: rgba(54, 249, 198, 0.12);
+    color: var(--cyan);
+    font: 400 10px var(--px);
+    pointer-events: none;
+}
+
+.chip {
+    align-self: flex-start;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    margin-top: 2px;
+    padding: 7px 10px;
+    border: 2px solid var(--cyan);
+    border-radius: 8px;
+    background: rgba(54, 249, 198, 0.1);
+    color: #fff;
+    font: 600 14px var(--body);
+    text-align: left;
+}
+
+.chip:hover {
+    background: rgba(54, 249, 198, 0.22);
+}
+
+.chip-where {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.share-button {
+    padding: 0 8px;
+    border: 2px solid var(--edge);
+    border-radius: 6px;
+    background: var(--card);
+    font-size: 16px;
+}
+
+.share-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0 14px 4px;
+    padding: 8px;
+    border: 3px solid var(--lav);
+    background: var(--night);
+}
+
+.share-menu button {
+    padding: 9px 10px;
+    border: 0;
+    background: none;
+    color: #fff;
+    font: 15px var(--body);
+    text-align: left;
+}
+
+.share-menu button:hover {
+    background: var(--line);
+}
+
+.share-menu p {
+    margin: 2px 10px 0;
+    color: var(--muted);
+    font-size: 12px;
 }
