@@ -35,6 +35,11 @@
   status = 200
 
 [[redirects]]
+  from = "/my-games"
+  to = "/my-games.html"
+  status = 200
+
+[[redirects]]
   from = "/game"
   to = "/game.html"
   status = 200

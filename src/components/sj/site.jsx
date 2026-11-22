@@ -117,6 +117,11 @@ const SiteNav = ({active, clear, onSoon}) => (
         <Wordmark />
         <div className={styles.navLinks}>
             <a
+                className={classNames(styles.navHide, {[styles.navOn]: active === 'mine'})}
+                href={links.myGames}
+                aria-current={active === 'mine' ? 'page' : null}
+            >{'My games'}</a>
+            <a
                 className={classNames(styles.navHide, {[styles.navOn]: active === 'games'})}
                 href={links.games}
                 aria-current={active === 'games' ? 'page' : null}
@@ -163,6 +168,7 @@ const SiteFooter = ({onSoon}) => (
                 <div className={styles.footerCol}>
                     <span className={styles.footerHead}>{'MAKE'}</span>
                     <a href={links.newGame}>{'Start making'}</a>
+                    <a href={links.myGames}>{'My games'}</a>
                     <a href={`${links.home}#makers`}>{'For makers'}</a>
                     <a href={`${links.home}#parents`}>{'Parents & teachers'}</a>
                 </div>

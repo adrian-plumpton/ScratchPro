@@ -47,6 +47,7 @@ const base = {
                 {from: /^\/\d+\/?$/, to: '/game.html'},
                 {from: /^\/game\/?$/, to: '/game.html'},
                 {from: /^\/games\/?$/, to: '/games.html'},
+                {from: /^\/my-games\/?$/, to: '/my-games.html'},
                 {from: /^\/\d+\/fullscreen\/?$/, to: '/fullscreen.html'},
                 {from: /^\/\d+\/editor\/?$/, to: '/editor.html'},
                 {from: /^\/\d+\/embed\/?$/, to: '/embed.html'},
@@ -155,6 +156,7 @@ module.exports = [
             'play': './src/playground/play.jsx',
             'landing': './src/playground/landing.jsx',
             'games': './src/playground/games.jsx',
+            'my-games': './src/playground/my-games.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
             'credits': './src/playground/credits/credits.jsx'
         },
@@ -216,6 +218,14 @@ module.exports = [
                 filename: 'games.html',
                 title: `Games - ${APP_NAME}`,
                 description: 'Play sample games in your browser, then remix them to see how they work.',
+                ...htmlWebpackPluginCommon
+            }),
+            new HtmlWebpackPlugin({
+                chunks: ['my-games'],
+                template: 'src/playground/sparkjam.ejs',
+                filename: 'my-games.html',
+                title: `My games - ${APP_NAME}`,
+                description: 'The games you have made, saved in this browser.',
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({

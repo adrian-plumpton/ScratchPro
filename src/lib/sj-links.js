@@ -6,6 +6,8 @@ const root = process.env.ROOT || '';
 const links = {
     home: root || './',
     games: `${root}games`,
+    myGames: `${root}my-games`,
+    savedGame: id => `${root}editor.html?game=${encodeURIComponent(id)}`,
     sample: id => `${root}game?sample=${encodeURIComponent(id)}`,
     scratchGame: id => `${root}game#${id}`,
     remixSample: id => `${root}editor.html?sample=${encodeURIComponent(id)}`,

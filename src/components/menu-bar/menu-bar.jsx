@@ -31,7 +31,6 @@ import SettingsMenu from './settings-menu.jsx';
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
-import TWSaveStatus from './tw-save-status.jsx';
 import TWNews from './tw-news.jsx';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
@@ -85,6 +84,7 @@ import collectMetadata from '../../lib/collect-metadata';
 
 import styles from './menu-bar.css';
 import {SoonDialog} from '../sj/site.jsx';
+import SJSaveStatus from '../sj-editor/save-status.jsx';
 import sj from '../sj/sj.css';
 import {links} from '../../lib/sj-links';
 
@@ -1056,9 +1056,8 @@ class MenuBar extends React.Component {
                 </div>
 
                 <div className={styles.accountInfoGroup}>
-                    <TWSaveStatus
-                        showSaveFilePicker={this.props.showSaveFilePicker}
-                    />
+                    {/* Sparkjam: games save to My games automatically; File > Save is still there. */}
+                    <SJSaveStatus />
                     <button
                         className={classNames(styles.sjButton, styles.sjJam)}
                         onClick={this.handleSoonJam}

@@ -1,0 +1,273 @@
+/* Sparkjam My games (design A3). */
+.main {
+    padding: 34px 48px 70px;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+}
+
+.h1 {
+    font: 400 22px var(--px);
+    color: var(--yellow);
+    text-shadow: 3px 3px 0 var(--pink);
+    margin-right: auto !important;
+}
+
+.search input {
+    all: unset;
+    box-sizing: border-box;
+    width: 260px;
+    border: 2px solid var(--edge);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: #fff;
+    font: 16px var(--body);
+}
+
+.search input::placeholder {
+    color: #7e68a6;
+}
+
+.search input:focus {
+    border-color: var(--lav);
+}
+
+.note {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 2px solid var(--edge);
+    background: var(--card);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 26px;
+    color: var(--muted);
+    font-size: 15px;
+}
+
+.note button {
+    all: unset;
+    cursor: pointer;
+    color: var(--cyan);
+    text-decoration: underline;
+}
+
+.error {
+    color: var(--pink);
+    margin-bottom: 20px !important;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.tile {
+    background: var(--card);
+    border: 3px solid var(--edge);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.art {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-bottom: 3px solid var(--edge);
+    border-radius: 7px 7px 0 0;
+    background: #000;
+}
+
+.no-art {
+    display: grid;
+    place-items: center;
+    background: #0f0419;
+}
+
+.body {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 14px 16px;
+}
+
+.info {
+    flex: 1;
+    min-width: 0;
+}
+
+.name {
+    font: 700 18px var(--body);
+    margin: 0 0 4px !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.name a:hover {
+    text-decoration: underline !important;
+}
+
+.when {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.rename {
+    all: unset;
+    box-sizing: border-box;
+    width: 100%;
+    border: 2px solid var(--lav);
+    padding: 4px 6px;
+    font: 700 17px var(--body);
+    color: #fff;
+}
+
+.more {
+    position: relative;
+}
+
+.more-button {
+    all: unset;
+    cursor: pointer;
+    padding: 2px 8px;
+    color: var(--muted);
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+.more-button:hover {
+    color: #fff;
+}
+
+.more-button:focus-visible,
+.menu a:focus-visible,
+.menu button:focus-visible {
+    outline: 3px solid var(--cyan);
+}
+
+.menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 6px);
+    z-index: 10;
+    width: 230px;
+    background: var(--night);
+    border: 3px solid var(--lav);
+    box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+}
+
+.menu a,
+.menu button {
+    all: unset;
+    cursor: pointer;
+    padding: 10px 12px;
+    font: 15px var(--body);
+    color: #f4efff;
+}
+
+.menu a:hover,
+.menu button:hover {
+    background: #2c1745;
+}
+
+.menu .danger {
+    color: #ff6fa8;
+}
+
+.confirm {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.none {
+    grid-column: 1 / -1;
+    color: var(--muted);
+}
+
+.new-tile {
+    border: 3px dashed var(--edge);
+    border-radius: 10px;
+    min-height: 260px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--muted);
+    text-align: center;
+    padding: 20px;
+}
+
+.new-tile:hover {
+    border-color: var(--lav);
+    color: #fff;
+}
+
+.plus {
+    font: 400 26px var(--px);
+    color: var(--yellow);
+}
+
+.new-name {
+    font: 400 12px var(--px);
+    color: #fff;
+}
+
+@media (max-width: 1100px) {
+    .grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 800px) {
+    .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .main {
+        padding: 22px 16px 40px;
+    }
+
+    .h1 {
+        font-size: 18px;
+        width: 100%;
+    }
+
+    .search,
+    .search input {
+        width: 100%;
+    }
+
+    .head > * {
+        flex: 1 1 100%;
+    }
+
+    .grid {
+        gap: 12px;
+    }
+
+    .body {
+        padding: 10px;
+    }
+
+    .name {
+        font-size: 15px;
+    }
+}

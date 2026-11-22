@@ -45,10 +45,13 @@ import {GameSide, Crumb, MoreGames} from '../components/sj-game/game-page.jsx';
 import gameStyles from '../components/sj-game/game-page.css';
 import {requestedSample} from '../lib/sample-project';
 import NewGamePicker from '../components/sj-editor/new-game-picker.jsx';
+import DeviceSaver from '../components/sj-editor/device-saver.jsx';
 
 import styles from './interface.css';
 
 const isInvalidEmbed = window.parent !== window;
+// Sparkjam: games are saved to My games from the editor page only.
+const isEditorPage = /\/editor(\.html)?$/.test(location.pathname);
 
 const handleClickAddonSettings = addonId => {
     // addonId might be a string of the addon to focus on, undefined, or an event (treat like undefined)
@@ -164,6 +167,7 @@ class Interface extends React.Component {
                         <SPTouchControls />
                         <SPMobileEditor />
                         {isEditor ? <NewGamePicker /> : null}
+                        {isEditorPage ? <DeviceSaver /> : null}
                         {isHomepage && !isBrowserSupported() ? (
                             <BrowserModal isRtl={isRtl} />
                         ) : null}

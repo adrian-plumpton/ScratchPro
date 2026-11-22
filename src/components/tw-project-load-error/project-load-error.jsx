@@ -7,6 +7,7 @@ import LumiNotice from '../sj/lumi-notice.jsx';
 import sj from '../sj/sj.css';
 import {links} from '../../lib/sj-links';
 import {ProjectUnavailableLegalReasons, ProjectUnsharedError, ProjectFetchError} from '../../lib/tw-load-project-error';
+import {SavedGameMissingError} from '../../lib/sj-library';
 
 const UNSHARED_DOCS = 'https://docs.turbowarp.org/unshared-projects';
 
@@ -51,10 +52,34 @@ const actions = (
 const isKnownProjectLoadError = error => (
     error instanceof ProjectUnsharedError ||
     error instanceof ProjectUnavailableLegalReasons ||
-    error instanceof ProjectFetchError
+    error instanceof ProjectFetchError ||
+    error instanceof SavedGameMissingError
 );
 
 const ProjectLoadError = ({error, isFullScreen}) => {
+    if (error instanceof SavedGameMissingError) {
+        return (
+            <LumiNotice
+                fullScreen={isFullScreen}
+                say="I can't find that game on this device."
+                actions={
+                    <React.Fragment>
+                        <a
+                            className={sj.btn}
+                            href={links.myGames}
+                        >{'MY GAMES'}</a>
+                        <a
+                            className={classNames(sj.btn, sj.btnGhost)}
+                            href={links.newGame}
+                        >{'START A NEW GAME'}</a>
+                    </React.Fragment>
+                }
+            >
+                <p>{'Games are saved in the browser they were made in. It might be on another device, ' +
+                    'or this browser\'s data was cleared.'}</p>
+            </LumiNotice>
+        );
+    }
     if (error instanceof ProjectUnavailableLegalReasons) {
         return (
             <LumiNotice

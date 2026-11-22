@@ -1,0 +1,51 @@
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 10px;
+    padding: 7px 10px;
+    border: 2px solid #3a2160;
+    border-radius: 6px;
+    font: 500 13px "Space Grotesk", system-ui, sans-serif;
+    color: #c9b8e6;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.pill:hover {
+    border-color: #c9a7ff;
+    color: #fff;
+}
+
+.pill i {
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+}
+
+.saved {
+    color: #7ee081;
+    border-color: #2f6b47;
+}
+
+.saved i {
+    box-shadow: 0 0 8px #7ee081;
+}
+
+.unsaved,
+.saving {
+    color: #ffe14d;
+    border-color: #6b5a1f;
+}
+
+.error {
+    color: #ff2e88;
+    border-color: #6b1f45;
+}
+
+@media (max-width: 1250px) {
+    .pill {
+        font-size: 0;
+        gap: 0;
+    }
+}
