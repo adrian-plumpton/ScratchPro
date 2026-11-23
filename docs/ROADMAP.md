@@ -28,6 +28,8 @@ stored).
 - Sparkjam editor theme by default (TurboWarp and Scratch looks still in Settings).
 - "Start a new game" picker (four templates or blank).
 - My games `/my-games`: games save in the browser as you make them, and to your account when signed in.
+- On phones, a menu button in the editor and on every page opens the site menu (Home, Games, My games,
+  new game, Jam, sign in).
 
 ### Accounts (Netlify Identity)
 - Sign in with Google or email and password; sign-up is invite-only for now.
