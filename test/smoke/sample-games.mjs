@@ -209,6 +209,16 @@ check(await phoneEditor.evaluate(() => {
         return false;
     }
 }), 'Reading an empty area of a costume does not crash the editor');
+// The menu bar scrolls sideways on phones; its dropdowns must not be clipped by it.
+await phoneEditor.locator('[class*="menu-bar_file-group"] > [class*="menu-bar_menu-bar-item"]').nth(1)
+    .click();
+check(await phoneEditor.evaluate(() => {
+    const menu = document.querySelector('[class*="menu-bar_menu-bar-menu_"] [class*="menu_menu_"]');
+    if (!menu) return false;
+    const box = menu.getBoundingClientRect();
+    return menu.contains(document.elementFromPoint(box.left + 20, box.top + 15));
+}), 'Menu bar dropdowns open in view on a phone');
+await phoneEditor.mouse.click(200, 500);
 const menuButton = phoneEditor.locator('[data-sj-menu-button]');
 check(await menuButton.isVisible(), 'The phone editor shows the menu button');
 await menuButton.click();

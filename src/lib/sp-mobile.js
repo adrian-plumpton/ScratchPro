@@ -170,6 +170,11 @@ body.sp-compact-editor [class*="gui_target-wrapper"] { padding-bottom: 14px; }
 body.sp-compact-editor [class*="stage-header_stage-header-wrapper_"] { min-width: 0 !important; }
 body.sp-compact-editor [class*="menu-bar_menu-bar_"] { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
 body.sp-compact-editor [class*="menu-bar_menu-bar_"]::-webkit-scrollbar { display: none; }
+/* Sparkjam: the bar scrolls sideways on phones, which clips anything that drops below it. Fixed
+   positioning lets the menus escape the clip and still open right under their button. */
+body.sp-compact-editor [class*="menu-bar_menu-bar_"] [class*="menu-bar_menu-bar-menu_"] > [class*="menu_menu_"] {
+    position: fixed !important;
+}
 body.sp-compact-editor [class*="menu-bar_feedback-link"] { display: none; }
 `;
 
