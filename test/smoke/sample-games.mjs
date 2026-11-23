@@ -201,6 +201,14 @@ const phoneEditor = await context.newPage();
 phoneEditor.on('pageerror', err => pageErrors.push(err.message));
 await phoneEditor.goto(`${BASE_URL}/editor.html`);
 await phoneEditor.waitForFunction(() => window.vm && vm.runtime.targets.length > 0, null, {timeout: 60000});
+check(await phoneEditor.evaluate(() => {
+    try {
+        return document.createElement('canvas').getContext('2d')
+            .getImageData(0, 0, 0, 10).width === 1;
+    } catch (e) {
+        return false;
+    }
+}), 'Reading an empty area of a costume does not crash the editor');
 const menuButton = phoneEditor.locator('[data-sj-menu-button]');
 check(await menuButton.isVisible(), 'The phone editor shows the menu button');
 await menuButton.click();
