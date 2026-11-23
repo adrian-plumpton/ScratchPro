@@ -20,6 +20,7 @@ import {openLoadingProject, closeLoadingProject} from '../../reducers/modals';
 import {setProjectTitle} from '../../reducers/project-title';
 import {setFileHandle} from '../../reducers/tw';
 import log from '../../lib/log';
+import {requestSaveNow} from './device-saver.jsx';
 import styles from './new-game-picker.css';
 
 const TEMPLATES = [
@@ -93,6 +94,7 @@ class NewGamePicker extends React.Component {
             await this.props.vm.loadProject(buffer);
             this.props.onFinishLoading(true, title);
             this.handleClose();
+            requestSaveNow();
         } catch (err) {
             log.error('Could not start the new game', err);
             if (started) this.props.onFinishLoading(false);
@@ -104,6 +106,7 @@ class NewGamePicker extends React.Component {
         const template = TEMPLATES.find(t => t.id === this.state.selected);
         if (template.id === 'blank') {
             this.handleClose();
+            requestSaveNow();
             return;
         }
         this.loadBuffer(async () => {

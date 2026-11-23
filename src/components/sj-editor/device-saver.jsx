@@ -20,6 +20,14 @@ const SAVE_DELAY = 2000;
 // Extensions (like the Phone blocks) can finish loading a few seconds later.
 const SETTLE_TIME = 5000;
 const THUMBNAIL_WIDTH = 320;
+const SAVE_NOW_DELAY = 1500;
+const SAVE_NOW_EVENT = 'sj-save-now';
+
+/**
+ * Ask the editor to save the game now, as a new entry in My games if it isn't one yet.
+ * @returns {boolean} Always true (from dispatchEvent).
+ */
+const requestSaveNow = () => window.dispatchEvent(new Event(SAVE_NOW_EVENT));
 
 const params = () => new URLSearchParams(location.search);
 
@@ -53,7 +61,7 @@ const thumbnail = vm => new Promise(resolve => {
 class DeviceSaver extends React.Component {
     constructor (props) {
         super(props);
-        bindAll(this, ['handleChanged', 'handleLoaded', 'handleHidden', 'save']);
+        bindAll(this, ['handleChanged', 'handleLoaded', 'handleHidden', 'handleLinkClick', 'handleSaveNow', 'save']);
         this.gameId = params().get('game');
         this.firstLoad = true;
         this.loadedAt = 0;
@@ -64,6 +72,8 @@ class DeviceSaver extends React.Component {
         this.props.vm.on('PROJECT_CHANGED', this.handleChanged);
         this.props.vm.runtime.on('PROJECT_LOADED', this.handleLoaded);
         document.addEventListener('visibilitychange', this.handleHidden);
+        document.addEventListener('click', this.handleLinkClick, true);
+        window.addEventListener(SAVE_NOW_EVENT, this.handleSaveNow);
         startAuth();
         this.stopAccount = onAccount(() => setSaveStatus({account: isAccountReady(getAccount())}));
         setSaveStatus({state: this.gameId ? 'saved' : 'idle', savedAt: null, account: isAccountReady(getAccount())});
@@ -72,6 +82,8 @@ class DeviceSaver extends React.Component {
         this.props.vm.off('PROJECT_CHANGED', this.handleChanged);
         this.props.vm.runtime.off('PROJECT_LOADED', this.handleLoaded);
         document.removeEventListener('visibilitychange', this.handleHidden);
+        document.removeEventListener('click', this.handleLinkClick, true);
+        window.removeEventListener(SAVE_NOW_EVENT, this.handleSaveNow);
         if (this.stopAccount) this.stopAccount();
         clearTimeout(this.timer);
     }
@@ -117,6 +129,38 @@ class DeviceSaver extends React.Component {
             clearTimeout(this.timer);
             this.save();
         }
+    }
+    handleSaveNow () {
+        // A game started from the new game picker is a game, edited or not: add it to My games.
+        if (this.props.isPlayerOnly) return;
+        setSaveStatus({state: 'unsaved'});
+        clearTimeout(this.timer);
+        // Give extensions (like the Phone blocks) a moment to finish loading first.
+        this.timer = setTimeout(this.save, SAVE_NOW_DELAY);
+    }
+    async flush () {
+        if (this.timer) {
+            clearTimeout(this.timer);
+            await this.save();
+        } else if (this.saving) {
+            await this.saving;
+        }
+    }
+    handleLinkClick (e) {
+        // Leaving the editor by a link (the site menu, My games) waits for the last change to save;
+        // a save started as the page unloads is often cut off, especially on phones.
+        if (!this.timer && !this.saving) return;
+        if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        const link = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+        if (!link || link.target || link.hasAttribute('download') || link.origin !== location.origin) return;
+        if (link.pathname === location.pathname && link.search === location.search) return;
+        e.preventDefault();
+        const href = link.href;
+        this.flush()
+            .catch(() => {})
+            .then(() => {
+                location.href = href;
+            });
     }
     async save () {
         this.timer = null;
@@ -192,6 +236,7 @@ DeviceSaver.propTypes = {
     }).isRequired
 };
 
+export {requestSaveNow};
 export default connect(
     state => ({
         isPlayerOnly: state.scratchGui.mode.isPlayerOnly,

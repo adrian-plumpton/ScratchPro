@@ -176,14 +176,18 @@ await desk.locator('button[data-id="lane-dash"]').click();
 await desk.getByRole('button', {name: 'START WITH RACER'}).click();
 await desk.waitForFunction(() => vm.runtime.targets.some(t => t.getName() === 'Stripes'), null, {timeout: 30000});
 check(true, 'The new game picker starts a game from a template');
+await desk.waitForURL(/[?&]game=/, {timeout: 15000})
+    .then(() => check(true, 'A game started from the picker is added to My games straight away'),
+        () => check(false, 'A game started from the picker is added to My games straight away'));
+const pickedUrl = desk.url();
 // A just-loaded game gets a few seconds to settle before changes count as edits.
 await desk.waitForTimeout(5500);
-check((await desk.textContent('a[class*="save-status_pill"]')).includes('Not saved yet'),
-    'Opening a game without changing it saves nothing');
 await desk.evaluate(() => vm.renameSprite(vm.runtime.getSpriteTargetByName('Stripes').id, 'Lines'));
-await desk.waitForURL(/[?&]game=/, {timeout: 15000});
-check((await desk.textContent('a[class*="save-status_pill"]')).includes('Saved on this device'),
-    'Editing saves the game on this device');
+await desk.waitForFunction(() => /Saved on this device/.test(
+    document.querySelector('a[class*="save-status_pill"]').textContent), null, {timeout: 15000})
+    .catch(() => {});
+check((await desk.textContent('a[class*="save-status_pill"]')).includes('Saved on this device') &&
+    desk.url() === pickedUrl, 'Editing saves the same game on this device');
 const savedUrl = desk.url();
 await desk.goto(`${BASE_URL}/my-games`);
 await desk.locator('article').first()
@@ -193,6 +197,12 @@ await desk.goto(savedUrl);
 await desk.waitForFunction(() => window.vm && vm.runtime.targets.some(t => t.getName() === 'Lines'), null,
     {timeout: 60000});
 check(true, 'A saved game reopens with its changes');
+// Just opening a sample to look at it doesn't add it to My games.
+await desk.goto(`${BASE_URL}/editor.html?sample=gem-maze`);
+await desk.waitForFunction(() => window.vm && vm.runtime.targets.length > 1, null, {timeout: 60000});
+await desk.waitForTimeout(6000);
+check((await desk.textContent('a[class*="save-status_pill"]')).includes('Not saved yet'),
+    'Opening a game without changing it saves nothing');
 check(!await desk.locator('[data-sj-menu-button]').isVisible(), 'Computers see the wordmark, not the menu button');
 await desk.close();
 
@@ -244,6 +254,17 @@ check(await phoneEditor.evaluate(() => ScratchBlocks.getMainWorkspace().getAllBl
     .every(block => block.inputList.every(input => input.fieldRow.every(field =>
         !field.getText || !field.getText() || field.size_.width > 4)))),
 'Blocks loaded while Stage view is showing still lay out their text');
+// Leaving by the menu straight after a change still saves it.
+await phoneEditor.waitForTimeout(5000);
+await phoneEditor.evaluate(() => vm.renameSprite(vm.runtime.getSpriteTargetByName('Hitbox').id, 'Bumper'));
+await phoneEditor.locator('[data-sj-menu-button]').click();
+await phoneEditor.locator('[data-sj-menu="mine"]').click();
+await phoneEditor.waitForURL(/my-games/, {timeout: 20000});
+await phoneEditor.locator('article').first()
+    .waitFor({timeout: 10000})
+    .catch(() => {});
+check(await phoneEditor.locator('article').count() > 0,
+    'A change made just before leaving by the menu is saved to My games');
 await phoneEditor.close();
 
 check(pageErrors.length === 0, `No page errors${pageErrors.length ? `: ${pageErrors.slice(0, 3).join(' | ')}` : ''}`);
