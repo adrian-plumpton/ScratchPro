@@ -193,7 +193,26 @@ await desk.goto(savedUrl);
 await desk.waitForFunction(() => window.vm && vm.runtime.targets.some(t => t.getName() === 'Lines'), null,
     {timeout: 60000});
 check(true, 'A saved game reopens with its changes');
+check(!await desk.locator('[data-sj-menu-button]').isVisible(), 'Computers see the wordmark, not the menu button');
 await desk.close();
+
+// On a phone the editor hides the site nav, so the menu button is the way back to the site.
+const phoneEditor = await context.newPage();
+phoneEditor.on('pageerror', err => pageErrors.push(err.message));
+await phoneEditor.goto(`${BASE_URL}/editor.html`);
+await phoneEditor.waitForFunction(() => window.vm && vm.runtime.targets.length > 0, null, {timeout: 60000});
+const menuButton = phoneEditor.locator('[data-sj-menu-button]');
+check(await menuButton.isVisible(), 'The phone editor shows the menu button');
+await menuButton.click();
+await phoneEditor.keyboard.press('Escape');
+await phoneEditor.locator('[data-sj-menu="home"]').waitFor({state: 'detached', timeout: 5000})
+    .then(() => check(true, 'Escape closes the menu'), () => check(false, 'Escape closes the menu'));
+await menuButton.click();
+await phoneEditor.locator('[data-sj-menu="mine"]').click();
+await phoneEditor.waitForURL(/my-games/, {timeout: 15000});
+check(await phoneEditor.locator('[data-sj-menu-button]').isVisible(),
+    'The menu leads to My games, which has the menu too');
+await phoneEditor.close();
 
 check(pageErrors.length === 0, `No page errors${pageErrors.length ? `: ${pageErrors.slice(0, 3).join(' | ')}` : ''}`);
 await browser.close();

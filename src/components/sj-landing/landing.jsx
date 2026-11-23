@@ -128,6 +128,7 @@ const Landing = () => {
         <div className={classNames(sj.page, styles.landing)}>
             <header className={styles.hero}>
                 <SiteNav
+                    active="home"
                     clear
                     onSoon={soon}
                 />

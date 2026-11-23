@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import {Lumi} from './pixel-art.jsx';
 import {AccountDialog, AccountButton, openAccountDialog} from './account.jsx';
+import {SiteMenuButton} from './site-menu.jsx';
 import {links, parseScratchProject} from '../../lib/sj-links';
 import {parseJamCode} from '../../lib/sj-jam-api';
 import styles from './sj.css';
@@ -163,6 +164,10 @@ const SiteNavBar = ({active, clear}) => (
                 className={classNames(styles.btn, styles.btnSm)}
                 href={links.newGame}
             >{'START MAKING'}</a>
+            <SiteMenuButton
+                active={active}
+                className={styles.navMenu}
+            />
         </div>
     </nav>
 );

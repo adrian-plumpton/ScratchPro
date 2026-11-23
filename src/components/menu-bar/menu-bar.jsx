@@ -84,6 +84,7 @@ import collectMetadata from '../../lib/collect-metadata';
 import styles from './menu-bar.css';
 import {SoonDialog} from '../sj/site.jsx';
 import {AccountDialog, AccountButton} from '../sj/account.jsx';
+import {SiteMenuButton} from '../sj/site-menu.jsx';
 import {JamControls} from '../sj-jam/jam-ui.jsx';
 import SJSaveStatus from '../sj-editor/save-status.jsx';
 import sj from '../sj/sj.css';
@@ -505,6 +506,11 @@ class MenuBar extends React.Component {
                 )}
             >
                 <div className={styles.mainMenu}>
+                    {/* Sparkjam: on narrow screens the wordmark hides; this menu is the way home. */}
+                    <SiteMenuButton
+                        active="editor"
+                        className={styles.sjMenuButton}
+                    />
                     <a
                         className={styles.sjWordmark}
                         href={links.home}

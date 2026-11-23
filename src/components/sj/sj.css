@@ -177,6 +177,11 @@
     font-weight: 600;
 }
 
+/* The site menu button only shows on phones, where the nav links are hidden. */
+.nav-menu {
+    display: none !important;
+}
+
 .nav-signin {
     all: unset;
     cursor: pointer;
@@ -457,6 +462,14 @@
 
     .nav-links .nav-hide {
         display: none;
+    }
+
+    .nav-links {
+        gap: 12px;
+    }
+
+    .nav-links .nav-menu {
+        display: inline-grid !important;
     }
 
     .wordmark {

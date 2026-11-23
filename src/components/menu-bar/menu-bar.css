@@ -284,9 +284,22 @@
     transform: translate(2px, 2px);
 }
 
+/* The site menu button stands in for the wordmark on narrower screens. */
+.sj-menu-button {
+    display: none !important;
+    width: 34px !important;
+    height: 34px !important;
+    margin: 0 8px 0 2px;
+    box-shadow: 2px 2px 0 #3b0a5a !important;
+}
+
 @media (max-width: 1100px) {
     .sj-wordmark {
         display: none;
+    }
+
+    .sj-menu-button {
+        display: inline-grid !important;
     }
 }
 
