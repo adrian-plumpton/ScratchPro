@@ -232,6 +232,8 @@ await phoneEditor.mouse.click(200, 500);
 const menuButton = phoneEditor.locator('[data-sj-menu-button]');
 check(await menuButton.isVisible(), 'The phone editor shows the menu button');
 await menuButton.click();
+await phoneEditor.locator('[data-sj-menu="home"]').waitFor();
+await phoneEditor.waitForTimeout(300);
 await phoneEditor.keyboard.press('Escape');
 await phoneEditor.locator('[data-sj-menu="home"]').waitFor({state: 'detached', timeout: 5000})
     .then(() => check(true, 'Escape closes the menu'), () => check(false, 'Escape closes the menu'));
