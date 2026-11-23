@@ -155,8 +155,14 @@ body.sp-compact-editor [class*="gui_editor-wrapper"] {
 body.sp-compact-editor [class*="gui_stage-and-target-wrapper"] {
     flex: 1 1 100% !important; min-width: 0 !important; overflow-y: auto;
 }
-body.sp-compact-editor.sp-view-code [class*="gui_stage-and-target-wrapper"],
-body.sp-compact-editor.sp-view-stage [class*="gui_editor-wrapper"] { display: none !important; }
+body.sp-compact-editor.sp-view-code [class*="gui_stage-and-target-wrapper"] { display: none !important; }
+/* Sparkjam: the code pane is moved off screen rather than display:none. Blocks and costumes load into it
+   while it is hidden (picking a sprite in Stage view), and with display:none every label and dropdown
+   measures 0 wide, so the text overlapped once you came back to Code. */
+body.sp-compact-editor.sp-view-stage [class*="gui_editor-wrapper"] {
+    position: fixed !important; top: 0; left: 0; bottom: 0; width: 100vw;
+    transform: translateX(-200vw); visibility: hidden !important; pointer-events: none !important;
+}
 /* A full-screen game lives in the stage column, so keep that column on while playing from Code view */
 body.sp-compact-editor.sp-immersive [class*="gui_stage-and-target-wrapper"] { display: flex !important; }
 body.sp-compact-editor [class*="stage-header_stage-size-toggle-group"] { display: none !important; }

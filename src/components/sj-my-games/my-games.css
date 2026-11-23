@@ -170,6 +170,56 @@
     padding: 6px;
 }
 
+/* Clicking anywhere else closes the menu. */
+.menu-backdrop {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 9;
+}
+
+/* The game's name heads the menu on phones, where it opens as a sheet. */
+.menu-title {
+    display: none;
+}
+
+/* Phones: cards are too narrow for a pop-up beside the button, so the menu opens as a sheet at the bottom. */
+@media (max-width: 600px) {
+    .menu-backdrop {
+        z-index: 1000;
+        background: rgba(10, 0, 18, 0.6);
+    }
+
+    .menu {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+        z-index: 1001;
+        width: auto;
+        padding: 8px;
+    }
+
+    .menu-title {
+        display: block;
+        margin: 4px 12px 6px;
+        overflow: hidden;
+        color: var(--muted);
+        font: 400 10px var(--px);
+        line-height: 1.6;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .more .menu a,
+    .more .menu button {
+        padding: 14px 12px;
+        font-size: 17px;
+    }
+}
+
 .menu a,
 .menu button {
     all: unset;

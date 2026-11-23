@@ -119,9 +119,20 @@ const GameTile = ({game, canSaveOnline, onChanged}) => {
                     >{'···'}</button>
                     {menu ? (
                         <div
+                            className={styles.menuBackdrop}
+                            onClick={close}
+                            aria-hidden="true"
+                        />
+                    ) : null}
+                    {menu ? (
+                        <div
                             className={styles.menu}
                             role="menu"
+                            onKeyDown={e => {
+                                if (e.key === 'Escape') close();
+                            }}
                         >
+                            <p className={styles.menuTitle}>{game.title || 'Untitled game'}</p>
                             {confirmDelete ? (
                                 <React.Fragment>
                                     <p className={styles.confirm}>

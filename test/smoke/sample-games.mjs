@@ -220,6 +220,20 @@ await phoneEditor.locator('[data-sj-menu="mine"]').click();
 await phoneEditor.waitForURL(/my-games/, {timeout: 15000});
 check(await phoneEditor.locator('[data-sj-menu-button]').isVisible(),
     'The menu leads to My games, which has the menu too');
+// Picking a sprite in Stage view loads its blocks while the code pane is hidden; they must still lay out.
+await phoneEditor.goto(`${BASE_URL}/editor.html?sample=lane-dash`);
+await phoneEditor.waitForFunction(() => window.vm && vm.runtime.getSpriteTargetByName('Hitbox'), null,
+    {timeout: 60000});
+await phoneEditor.waitForTimeout(1500);
+await phoneEditor.getByRole('button', {name: 'Stage & sprites'}).click();
+await phoneEditor.locator('[class*="sprite-selector-item_sprite-name"]', {hasText: 'Player'}).click();
+await phoneEditor.waitForTimeout(800);
+await phoneEditor.getByRole('button', {name: 'Code', exact: true}).click();
+await phoneEditor.waitForTimeout(800);
+check(await phoneEditor.evaluate(() => ScratchBlocks.getMainWorkspace().getAllBlocks()
+    .every(block => block.inputList.every(input => input.fieldRow.every(field =>
+        !field.getText || !field.getText() || field.size_.width > 4)))),
+'Blocks loaded while Stage view is showing still lay out their text');
 await phoneEditor.close();
 
 check(pageErrors.length === 0, `No page errors${pageErrors.length ? `: ${pageErrors.slice(0, 3).join(' | ')}` : ''}`);
